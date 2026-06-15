@@ -1,0 +1,38 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Logs / temporary files
+*.log
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Dependencies / build outputs
+node_modules/
+dist/
+build/
+.next/
+out/
+
+# Local secrets / real data
+.env
+.env.*
+*.key
+*.pem
+secrets/
+private/
+real_data/
+actual_data/
+customer_data/
+skill_sheets/
+mail_exports/
+
+# Local database files
+*.sqlite
+*.sqlite3
+*.db

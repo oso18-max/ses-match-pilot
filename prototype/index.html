@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SES Match Pilot MVP</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="メインナビゲーション">
+      <div class="brand">
+        <div class="brand-mark">S</div>
+        <div>
+          <strong>SES Match Pilot</strong>
+          <span>仮データMVP</span>
+        </div>
+      </div>
+      <nav class="nav-list">
+        <button class="nav-item is-active" data-view="dashboard">ダッシュボード</button>
+        <button class="nav-item" data-view="todos">今日やること</button>
+        <button class="nav-item" data-view="projects">案件</button>
+        <button class="nav-item" data-view="talents">人材</button>
+        <button class="nav-item" data-view="matches">マッチング</button>
+        <button class="nav-item" data-view="proposals">提案管理</button>
+        <button class="nav-item" data-view="interviews">面談管理</button>
+        <button class="nav-item" data-view="activity">活動履歴</button>
+      </nav>
+      <div class="safety-box">
+        <strong>安全境界</strong>
+        <span>実データなし</span>
+        <span>LLM未接続</span>
+        <span>外部連携なし</span>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">PMのいさお / MVP prototype</p>
+          <h1 id="view-title">ダッシュボード</h1>
+        </div>
+        <div class="top-actions">
+          <label class="search-box">
+            <span>検索</span>
+            <input id="globalSearch" type="search" placeholder="案件・人材・スキル">
+          </label>
+          <button class="primary-action" id="resetBtn">初期表示</button>
+        </div>
+      </header>
+
+      <section class="notice">
+        <strong>この画面は仮ID・ダミーデータ専用です。</strong>
+        実名、メール本文、スキルシート本文、取引先実名、APIキーは入力しない運用です。
+      </section>
+
+      <section id="content" class="content" aria-live="polite"></section>
+    </main>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
