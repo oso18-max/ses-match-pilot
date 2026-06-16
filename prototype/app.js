@@ -1,11 +1,12 @@
 const state = {
   view: "overview",
   query: "",
-  selectedRequestId: "req_001",
+  selectedRequestId: null,
   selectedTalentId: "talent_001",
   autoSend: false,
   sendThreshold: 80,
-  maxSendPerTalent: 3
+  maxSendPerTalent: 3,
+  showMatchSettings: false
 };
 
 const requestTtlDays = 7;
@@ -362,50 +363,68 @@ function toggleAutoSend() {
   render();
 }
 
+function toggleMatchSettings() {
+  state.showMatchSettings = !state.showMatchSettings;
+  render();
+}
+
 function renderOverview() {
   const batches = matchBatches();
-  const readyCount = batches.filter((batch) => batch.sendable.length > 0).length;
+  const matchCount = batches.filter((batch) => batch.sendable.length > 0).length;
+  const unsentCount = Math.max(matchCount - histories.length, 0);
   const selectedBatch = batches.find((batch) => batch.request.id === state.selectedRequestId) || batches[0];
   return `
     <div class="metrics">
-      <div class="metric"><span>本日マッチングOK</span><strong>${readyCount}</strong></div>
-      <div class="metric"><span>送信済み</span><strong>${histories.length}</strong></div>
-      <div class="metric"><span>返信通知</span><strong>${replies.length}</strong></div>
-      <div class="metric"><span>自動送信</span><strong>${state.autoSend ? "ON" : "OFF"}</strong></div>
+      <div class="metric"><span>マッチング数</span><strong>${matchCount}</strong></div>
+      <div class="metric"><span>未送信</span><strong>${unsentCount}</strong></div>
+      <div class="metric"><span>本日の提案数</span><strong>${histories.length}</strong></div>
+      <div class="metric"><span>返信数</span><strong>${replies.length}</strong></div>
     </div>
+    ${state.showMatchSettings ? renderMatchSettingsPanel() : ""}
     <div class="grid-2">
       <section class="panel">
         <div class="toolbar">
-          <button class="${state.autoSend ? "primary-action" : "ghost-action"}" onclick="toggleAutoSend()">自動送信 ${state.autoSend ? "ON" : "OFF"}</button>
-          <label class="field-inline">送信基準
-            <select onchange="state.sendThreshold = Number(this.value); render();">
-              <option value="80" ${state.sendThreshold === 80 ? "selected" : ""}>80点以上</option>
-              <option value="70" ${state.sendThreshold === 70 ? "selected" : ""}>70点以上</option>
-              <option value="60" ${state.sendThreshold === 60 ? "selected" : ""}>60点以上</option>
-            </select>
-          </label>
-          <label class="field-inline">同一人材の送信上限
-            <select onchange="state.maxSendPerTalent = Number(this.value); render();">
-              <option value="1" ${state.maxSendPerTalent === 1 ? "selected" : ""}>1件まで</option>
-              <option value="3" ${state.maxSendPerTalent === 3 ? "selected" : ""}>3件まで</option>
-              <option value="5" ${state.maxSendPerTalent === 5 ? "selected" : ""}>5件まで</option>
-            </select>
-          </label>
+          <button class="ghost-action" onclick="toggleMatchSettings()">マッチング設定</button>
+          <span class="muted">基準: ${state.sendThreshold}点以上 / 上限: ${state.maxSendPerTalent}件 / 自動送信: ${state.autoSend ? "ON" : "OFF"}</span>
         </div>
         <h2>マッチング結果</h2>
-        ${renderMatchBatchList(batches)}
+        ${state.selectedRequestId ? renderMatchBatchList(batches) : `<p class="muted">案件メールまたはマッチング画面から対象を選ぶと、結果が表示されます。</p>`}
       </section>
       <section class="panel">
         <h2>マッチング詳細</h2>
-        ${renderRequestCards([selectedBatch.request])}
+        ${state.selectedRequestId ? renderRequestCards([selectedBatch.request]) : `<p class="muted">まだ対象が選択されていません。</p>`}
         <h3>候補者</h3>
-        ${renderMatchCards(selectedBatch.matches.slice(0, 3))}
+        ${state.selectedRequestId ? renderMatchCards(selectedBatch.matches.slice(0, 3)) : ""}
         <div class="toolbar">
           <button class="primary-action" onclick="setView('send')">送信画面へ</button>
           <button class="ghost-action" onclick="setView('history')">履歴を見る</button>
         </div>
       </section>
     </div>
+  `;
+}
+
+function renderMatchSettingsPanel() {
+  return `
+    <section class="panel">
+      <div class="toolbar">
+        <button class="${state.autoSend ? "primary-action" : "ghost-action"}" onclick="toggleAutoSend()">自動送信 ${state.autoSend ? "ON" : "OFF"}</button>
+        <label class="field-inline">送信基準
+          <select onchange="state.sendThreshold = Number(this.value); render();">
+            <option value="80" ${state.sendThreshold === 80 ? "selected" : ""}>80点以上</option>
+            <option value="70" ${state.sendThreshold === 70 ? "selected" : ""}>70点以上</option>
+            <option value="60" ${state.sendThreshold === 60 ? "selected" : ""}>60点以上</option>
+          </select>
+        </label>
+        <label class="field-inline">同一人材の送信上限
+          <select onchange="state.maxSendPerTalent = Number(this.value); render();">
+            <option value="1" ${state.maxSendPerTalent === 1 ? "selected" : ""}>1件まで</option>
+            <option value="3" ${state.maxSendPerTalent === 3 ? "selected" : ""}>3件まで</option>
+            <option value="5" ${state.maxSendPerTalent === 5 ? "selected" : ""}>5件まで</option>
+          </select>
+        </label>
+      </div>
+    </section>
   `;
 }
 
@@ -707,13 +726,9 @@ document.getElementById("searchInput").addEventListener("input", (event) => {
   render();
 });
 
-document.getElementById("resetBtn").addEventListener("click", () => {
-  state.view = "overview";
-  state.query = "";
-  state.selectedRequestId = "req_001";
-  state.selectedTalentId = "talent_001";
-  document.getElementById("searchInput").value = "";
-  setView("overview");
+document.getElementById("settingsBtn").addEventListener("click", () => {
+  state.showMatchSettings = true;
+  setView("settings");
 });
 
 render();
