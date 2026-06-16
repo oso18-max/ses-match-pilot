@@ -371,6 +371,15 @@ tr:last-child td { border-bottom: 0; }
   gap: 6px;
 }
 
+.field-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .field label {
   color: var(--muted);
   font-size: 13px;

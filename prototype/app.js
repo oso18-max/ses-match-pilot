@@ -3,7 +3,9 @@ const state = {
   query: "",
   selectedRequestId: "req_001",
   selectedTalentId: "talent_001",
-  autoSend: false
+  autoSend: false,
+  sendThreshold: 80,
+  maxSendPerTalent: 3
 };
 
 const requestTtlDays = 7;
@@ -294,6 +296,20 @@ function sendTargets(request = selectedRequest(), talent = selectedTalent()) {
   });
 }
 
+function matchBatches() {
+  return incomingRequests.map((request) => {
+    const matches = rankedMatches(request);
+    const sendable = matches.filter((match) => match.rank !== "除外" && match.score >= state.sendThreshold);
+    return {
+      request,
+      matches,
+      sendable,
+      topScore: matches[0]?.score || 0,
+      topTalent: matches[0] ? skillSheets.find((talent) => talent.id === matches[0].talentId) : null
+    };
+  });
+}
+
 function templateFor(customer, request, talent) {
   const body = templates[Math.abs(customer.company.length + talent.code.length) % templates.length];
   return `${customer.company}
@@ -347,34 +363,67 @@ function toggleAutoSend() {
 }
 
 function renderOverview() {
+  const batches = matchBatches();
+  const readyCount = batches.filter((batch) => batch.sendable.length > 0).length;
+  const selectedBatch = batches.find((batch) => batch.request.id === state.selectedRequestId) || batches[0];
   return `
     <div class="metrics">
-      <div class="metric"><span>本日受信案件</span><strong>${incomingRequests.length}</strong></div>
-      <div class="metric"><span>登録スキルシート</span><strong>${skillSheets.length}</strong></div>
-      <div class="metric"><span>送信可能企業</span><strong>${customers.filter((c) => c.sendable).length}</strong></div>
-      <div class="metric"><span>返信検知</span><strong>${replies.length}</strong></div>
+      <div class="metric"><span>本日マッチングOK</span><strong>${readyCount}</strong></div>
+      <div class="metric"><span>送信済み</span><strong>${histories.length}</strong></div>
+      <div class="metric"><span>返信通知</span><strong>${replies.length}</strong></div>
+      <div class="metric"><span>自動送信</span><strong>${state.autoSend ? "ON" : "OFF"}</strong></div>
     </div>
-    <section class="panel">
-      <h2>作りたいサービスの流れ</h2>
-      <div class="flow">
-        <div class="flow-step"><span>1</span><strong>案件メール受信</strong><p class="muted">本文と添付を取得</p></div>
-        <div class="flow-step"><span>2</span><strong>AIなしで読取</strong><p class="muted">Excel/Word/CSV/テキストPDF</p></div>
-        <div class="flow-step"><span>3</span><strong>スキルシート照合</strong><p class="muted">候補者1〜3位</p></div>
-        <div class="flow-step"><span>4</span><strong>個別メール生成</strong><p class="muted">BCCなし・会社ごと</p></div>
-        <div class="flow-step"><span>5</span><strong>履歴/返信管理</strong><p class="muted">会社名・メールで紐づけ</p></div>
-      </div>
-    </section>
     <div class="grid-2">
       <section class="panel">
-        <h2>今日の案件メール</h2>
-        ${renderRequestCards(incomingRequests)}
+        <div class="toolbar">
+          <button class="${state.autoSend ? "primary-action" : "ghost-action"}" onclick="toggleAutoSend()">自動送信 ${state.autoSend ? "ON" : "OFF"}</button>
+          <label class="field-inline">送信基準
+            <select onchange="state.sendThreshold = Number(this.value); render();">
+              <option value="80" ${state.sendThreshold === 80 ? "selected" : ""}>80点以上</option>
+              <option value="70" ${state.sendThreshold === 70 ? "selected" : ""}>70点以上</option>
+              <option value="60" ${state.sendThreshold === 60 ? "selected" : ""}>60点以上</option>
+            </select>
+          </label>
+          <label class="field-inline">同一人材の送信上限
+            <select onchange="state.maxSendPerTalent = Number(this.value); render();">
+              <option value="1" ${state.maxSendPerTalent === 1 ? "selected" : ""}>1件まで</option>
+              <option value="3" ${state.maxSendPerTalent === 3 ? "selected" : ""}>3件まで</option>
+              <option value="5" ${state.maxSendPerTalent === 5 ? "selected" : ""}>5件まで</option>
+            </select>
+          </label>
+        </div>
+        <h2>マッチング結果</h2>
+        ${renderMatchBatchList(batches)}
       </section>
       <section class="panel">
-        <h2>上位マッチング</h2>
-        ${renderMatchCards(rankedMatches().slice(0, 3))}
+        <h2>マッチング詳細</h2>
+        ${renderRequestCards([selectedBatch.request])}
+        <h3>候補者</h3>
+        ${renderMatchCards(selectedBatch.matches.slice(0, 3))}
+        <div class="toolbar">
+          <button class="primary-action" onclick="setView('send')">送信画面へ</button>
+          <button class="ghost-action" onclick="setView('history')">履歴を見る</button>
+        </div>
       </section>
     </div>
   `;
+}
+
+function renderMatchBatchList(batches) {
+  return `<div class="card-list">${batches.filter(matchesQuery).map((batch) => {
+    const ready = batch.sendable.length > 0;
+    return `
+      <div class="action-card">
+        <div>${pill(ready ? "送信候補" : "確認", ready ? "" : "warn")}</div>
+        <div>
+          <strong>${batch.request.subject}</strong>
+          <div class="meta">${batch.request.id} / 最高${batch.topScore}点 / ${batch.topTalent ? batch.topTalent.code : "候補なし"}</div>
+          <div class="meta">送信基準${state.sendThreshold}点以上: ${batch.sendable.length}件</div>
+        </div>
+        <button class="small-action" onclick="setRequest('${batch.request.id}')">詳細</button>
+      </div>
+    `;
+  }).join("")}</div>`;
 }
 
 function renderRequestCards(list) {
@@ -393,37 +442,21 @@ function renderRequestCards(list) {
 
 function renderInbox() {
   return `
-    <div class="grid-2">
-      <section class="panel">
-        <div class="toolbar">
-          ${pill("メール本文", "blue")}
-          ${pill("添付Excel/Word/PDF", "blue")}
-          ${pill("AIなし抽出", "gray")}
-        </div>
-        <h2>案件メール</h2>
-        ${table(
-          ["受信", "件名/添付", "抽出条件", "状態", "操作"],
-          incomingRequests.filter(matchesQuery).map((request) => `
-            <tr>
-              <td>${request.receivedAt}<br><span class="muted">${request.fromAddress}</span></td>
-              <td><strong>${request.subject}</strong><br>${request.attachment} / ${request.fileType}</td>
-              <td>${request.extracted.required.join(" / ")}<br>${request.extracted.location} / ${request.extracted.workStyle} / ${request.extracted.unitMax}万円</td>
-              <td><span class="status ${request.status === "確認必要" ? "warn" : "ok"}">${request.status}</span><br><span class="muted">有効期限: ${request.validUntil}</span></td>
-              <td><button class="small-action" onclick="setRequest('${request.id}'); setView('matches')">候補を見る</button></td>
-            </tr>
-          `)
-        )}
-      </section>
-      <section class="detail-panel">
-        <h2>読取対象</h2>
-        <div class="card-list">
-          <div class="action-card"><div>${pill("OK")}</div><div><strong>Excel / CSV</strong><div class="meta">セルの文字・数値・日付を読む</div></div></div>
-          <div class="action-card"><div>${pill("OK")}</div><div><strong>Word</strong><div class="meta">文書内テキストを読む</div></div></div>
-          <div class="action-card"><div>${pill("OK")}</div><div><strong>テキストPDF</strong><div class="meta">コピー可能な文字を読む</div></div></div>
-          <div class="action-card"><div>${pill("対象外", "danger")}</div><div><strong>画像PDF / スキャンPDF</strong><div class="meta">OCRまたはAI追加が必要</div></div></div>
-        </div>
-      </section>
-    </div>
+    <section class="panel">
+      <h2>案件メール</h2>
+      ${table(
+        ["受信", "件名/添付", "抽出条件", "状態", "操作"],
+        incomingRequests.filter(matchesQuery).map((request) => `
+          <tr>
+            <td>${request.receivedAt}<br><span class="muted">${request.fromAddress}</span></td>
+            <td><strong>${request.subject}</strong><br>${request.attachment} / ${request.fileType}</td>
+            <td>${request.extracted.required.join(" / ")}<br>${request.extracted.location} / ${request.extracted.workStyle} / ${request.extracted.unitMax}万円</td>
+            <td><span class="status ${request.status === "確認必要" ? "warn" : "ok"}">${request.status}</span><br><span class="muted">有効期限: ${request.validUntil}</span></td>
+            <td><button class="small-action" onclick="setRequest('${request.id}'); setView('matches')">マッチング</button></td>
+          </tr>
+        `)
+      )}
+    </section>
   `;
 }
 
@@ -433,9 +466,16 @@ function renderSheets() {
       <div class="toolbar">
         <button class="ghost-action">Drive取込予定</button>
         <button class="ghost-action">CSV/Excel登録予定</button>
-        <span class="muted">初期版はスキルシート保管場所の設計確認です。</span>
+        <label class="field-inline">有効期限
+          <select>
+            <option>${talentTtlDays}日</option>
+            <option>1日</option>
+            <option>3日</option>
+            <option>10日</option>
+          </select>
+        </label>
       </div>
-      <h2>スキルシート保管</h2>
+      <h2>登録スキルシート</h2>
       ${table(
         ["仮ID", "ファイル", "スキル", "条件", "有効期限", "操作"],
         skillSheets.filter(matchesQuery).map((talent) => `
@@ -479,14 +519,13 @@ function renderMatches() {
   return `
     <div class="grid-2">
       <section class="panel">
-        <h2>案件メール起点のマッチング</h2>
-        <p class="muted">人が毎回選ぶのではなく、受信案件から自動で候補者1〜3位を出す想定です。</p>
+        <h2>マッチング</h2>
         ${renderRequestCards([request])}
         <h3>候補者ランキング</h3>
         ${renderMatchCards(matches)}
       </section>
       <section class="detail-panel">
-        <h2>抽出された案件条件</h2>
+        <h2>案件条件</h2>
         <div class="card-list">
           <div><strong>職種</strong><div class="meta">${request.extracted.role}</div></div>
           <div><strong>必須</strong>${pills(request.extracted.required)}</div>
@@ -630,9 +669,9 @@ function renderSettings() {
 
 function updateTitle() {
   const titles = {
-    overview: "全体像",
+    overview: "マッチング管理",
     inbox: "案件メール",
-    sheets: "スキルシート",
+    sheets: "登録スキルシート",
     matches: "マッチング",
     customers: "送信先マスタ",
     send: "個別送信",
