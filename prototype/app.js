@@ -667,7 +667,7 @@ function renderSettings() {
       <section class="panel">
         <h2>送信設定</h2>
         <div class="form-grid">
-          <div class="field">
+          <div class="field wide">
             <label>自動送信</label>
             <select onchange="state.autoSend = this.value === 'on'; render();">
               <option value="off" ${state.autoSend ? "" : "selected"}>OFF: 人が確認して送信</option>
@@ -707,10 +707,6 @@ function renderSettings() {
               <option>3日</option>
               <option>10日</option>
             </select>
-          </div>
-          <div class="field wide">
-            <label>送信条件</label>
-            <textarea readonly>マッチング点数が基準以上の候補だけ送信対象にする。同じ人材は、設定した件数を超えて送らない。</textarea>
           </div>
         </div>
       </section>
