@@ -433,7 +433,7 @@ function renderMatchBatchList(batches) {
     const ready = batch.sendable.length > 0;
     return `
       <div class="action-card">
-        <div>${pill(ready ? "送信候補" : "確認", ready ? "" : "warn")}</div>
+        <div>${pill(ready ? "提案候補" : "確認", ready ? "" : "warn")}</div>
         <div>
           <strong>${batch.request.subject}</strong>
           <div class="meta">${batch.request.id} / 最高${batch.topScore}点 / ${batch.topTalent ? batch.topTalent.code : "候補なし"}</div>
@@ -517,9 +517,11 @@ function renderMatchCards(matches) {
     const request = incomingRequests.find((item) => item.id === match.requestId);
     const talent = skillSheets.find((item) => item.id === match.talentId);
     const rankClass = match.rank === "1位" ? "a" : match.rank === "2位" ? "b" : "c";
+    const decision = match.rank === "除外" ? "対象外" : match.score >= state.sendThreshold ? "送信対象" : "保留";
+    const decisionType = decision === "送信対象" ? "" : decision === "保留" ? "warn" : "danger";
     return `
       <div class="action-card">
-        <div><span class="rank ${rankClass}">${match.rank}</span><div class="meta">${match.score}点</div></div>
+        <div><span class="rank ${rankClass}">${match.rank}</span><div class="meta">${match.score}点</div>${pill(decision, decisionType)}</div>
         <div>
           <strong>${request.subject}</strong>
           <div>${talent.code} / ${talent.role}</div>
@@ -734,7 +736,7 @@ function updateTitle() {
     replies: "返信検知",
     settings: "設定"
   };
-  document.getElementById("viewTitle").textContent = titles[state.view] || "SES Auto Propose";
+  document.getElementById("viewTitle").textContent = titles[state.view] || "SES Auto Send";
 }
 
 function render() {
