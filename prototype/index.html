@@ -10,10 +10,17 @@
   <div class="app-shell">
     <aside class="sidebar">
       <div class="brand">
-        <div class="brand-mark">SES</div>
+        <div class="brand-mark" aria-hidden="true">
+          <svg width="50" height="40" viewBox="0 0 50 40" fill="none">
+            <path d="M7 10h9c13 0 13 10 27 10" stroke="#0f766e" stroke-width="4" stroke-linecap="round"/>
+            <path d="M7 30h9c13 0 13-10 27-10" stroke="#0891b2" stroke-width="4" stroke-linecap="round"/>
+            <path d="M36 13l7 7-7 7" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="7" cy="10" r="4" fill="#0f172a"/>
+            <circle cx="7" cy="30" r="4" fill="#0f172a"/>
+          </svg>
+        </div>
         <div>
           <strong>SES Auto Send</strong>
-          <span>Matching Console</span>
         </div>
       </div>
       <nav class="nav-list" aria-label="メインナビゲーション">
@@ -38,7 +45,6 @@
     <main class="main">
       <header class="topbar">
         <div>
-          <p class="eyebrow">Matching & Sending Console</p>
           <h1 id="viewTitle">全体像</h1>
         </div>
         <div class="top-actions">

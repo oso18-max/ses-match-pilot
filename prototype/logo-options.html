@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SES Auto Send Logo Options</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --ink: #111827;
+      --muted: #6b7280;
+      --line: #d9e0e8;
+      --teal: #0f766e;
+      --blue: #1d4ed8;
+      --red: #dc2626;
+      --white: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Segoe UI", "Meiryo", sans-serif;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 34px 0 44px;
+    }
+
+    header {
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    .note {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      min-height: 166px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 64px;
+    }
+
+    .wordmark {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-weight: 900;
+      letter-spacing: 0;
+      line-height: 1;
+    }
+
+    .wordmark .ses { font-size: 21px; }
+    .wordmark .main { font-size: 28px; }
+    .wordmark .sub { color: var(--muted); font-size: 16px; font-weight: 800; }
+
+    .desc {
+      margin-top: 15px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .mark {
+      width: 52px;
+      height: 52px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+    }
+
+    .mark.dark { background: var(--ink); color: var(--white); }
+    .mark.teal { background: #ccfbf1; color: var(--teal); }
+    .mark.blue { background: #dbeafe; color: var(--blue); }
+    .mark.outline { border: 2px solid var(--ink); color: var(--ink); background: var(--white); }
+
+    svg { display: block; }
+
+    .mono {
+      font-family: "Segoe UI", "Meiryo", sans-serif;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .badge {
+      height: 36px;
+      border-radius: 8px;
+      padding: 0 10px;
+      display: inline-grid;
+      place-items: center;
+      background: var(--ink);
+      color: var(--white);
+      font-weight: 900;
+      font-size: 16px;
+    }
+
+    .split-mark {
+      display: grid;
+      grid-template-columns: 18px 18px;
+      gap: 4px;
+    }
+
+    .split-mark span {
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
+      background: currentColor;
+    }
+
+    .line-logo {
+      width: 58px;
+      height: 42px;
+      color: var(--teal);
+    }
+
+    .compact .wordmark .main { font-size: 31px; }
+
+    @media (max-width: 800px) {
+      .grid { grid-template-columns: 1fr; }
+      main { width: min(100% - 24px, 1180px); padding-top: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>SES Auto Send ロゴ案</h1>
+      <p class="note">実務SaaS感、送信、マッチング、信頼感を軸にした10パターンです。</p>
+    </header>
+
+    <section class="grid">
+      <article class="card">
+        <div class="label">01 / Envelope Basic</div>
+        <div class="logo">
+          <div class="mark dark">
+            <svg width="29" height="22" viewBox="0 0 29 22" fill="none" aria-hidden="true">
+              <rect x="2" y="3" width="25" height="16" rx="3" stroke="currentColor" stroke-width="2"/>
+              <path d="M4 5l10.5 8L25 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="wordmark"><span class="ses">SES</span><span class="main">Auto Send</span></div>
+        </div>
+        <div class="desc">一番シンプル。小さくしても読める。</div>
+      </article>
+
+      <article class="card">
+        <div class="label">02 / Checked Mail</div>
+        <div class="logo">
+          <div class="mark teal">
+            <svg width="31" height="24" viewBox="0 0 31 24" fill="none" aria-hidden="true">
+              <rect x="2" y="4" width="24" height="16" rx="3" stroke="currentColor" stroke-width="2"/>
+              <path d="M5 6l9 7 9-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M20 16l3 3 6-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="wordmark"><span class="ses">SES</span><span class="main">Auto Send</span></div>
+        </div>
+        <div class="desc">確認済みで送る印象。安心感が強い。</div>
+      </article>
+
+      <article class="card">
+        <div class="label">03 / Match Merge</div>
+        <div class="logo">
+          <svg class="line-logo" viewBox="0 0 58 42" fill="none" aria-hidden="true">
+            <circle cx="8" cy="10" r="5" fill="currentColor"/>
+            <circle cx="8" cy="32" r="5" fill="currentColor"/>
+            <circle cx="50" cy="21" r="6" fill="#111827"/>
+            <path d="M13 10c15 0 17 11 31 11M13 32c15 0 17-11 31-11" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+          <div class="wordmark"><span class="ses">SES</span><span class="main">Auto Send</span></div>
+        </div>
+        <div class="desc">案件と人材が合流する。マッチング感が一番強い。</div>
+      </article>
+
+      <article class="card">
+        <div class="label">04 / Forward Arrow</div>
+        <div class="logo">
+          <div class="mark outline">
+            <svg width="30" height="24" viewBox="0 0 30 24" fill="none" aria-hidden="true">
+              <path d="M4 12h19" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+              <path d="M17 5l7 7-7 7" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="wordmark"><span class="ses">SES</span><span class="main">Auto Send</span></div>
+        </div>
+        <div class="desc">営業が前に進む感じ。送信の意味が明快。</div>
+      </article>
+
+      <article class="card">
+        <div class="label">05 / SAS Monogram</div>
+        <div class="logo">
+          <div class="badge">SAS</div>
+          <div class="wordmark"><span class="main">Auto Send</span><span class="sub">for SES</span></div>
+        </div>
+        <div class="desc">覚えやすさ重視。サービス名として強い。</div>
+      </article>
+
+      <article class="card compact">
+        <div class="label">06 / Auto Send Lead</div>
+        <div class="logo">
+          <div class="wordmark"><span class="main">Auto Send</span><span class="sub">SES</span></div>
+        </div>
+        <div class="desc">売り文句優先。何をするサービスかすぐ分かる。</div>
+      </article>
+
+      <article class="card">
+        <div class="label">07 / Send Line Check</div>
+        <div class="logo">
+          <div class="mark dark">
+            <svg width="32" height="25" viewBox="0 0 32 25" fill="none" aria-hidden="true">
+              <path d="M3 13h15" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+              <path d="M13 8l6 5-6 5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M21 17l3 3 6-8" stroke="#14b8a6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="wordmark"><span class="ses">SES</span><span class="main">Auto Send</span></div>
+        </div>
+        <div class="desc">送信とチェックの両方。実務SaaSとしてバランスがよい。</div>
+      </article>
+
+      <article class="card">
+        <div class="label">08 / Console Grid</div>
+        <div class="logo">
+          <div class="mark blue">
+            <div class="split-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+          </div>
+          <div class="wordmark"><span class="ses">SES</span><span class="main">Auto Send</span></div>
+        </div>
+        <div class="desc">管理画面・運用ツール感。堅い印象。</div>
+      </article>
+
+      <article class="card">
+        <div class="label">09 / Two Point Match</div>
+        <div class="logo">
+          <div class="mark teal">
+            <svg width="32" height="26" viewBox="0 0 32 26" fill="none" aria-hidden="true">
+              <circle cx="7" cy="7" r="4" fill="currentColor"/>
+              <circle cx="25" cy="19" r="4" fill="currentColor"/>
+              <path d="M11 8c8 1 8 9 10 10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+              <path d="M6 19h12" stroke="#111827" stroke-width="2.4" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="wordmark"><span class="ses">SES</span><span class="main">Auto Send</span></div>
+        </div>
+        <div class="desc">案件と人材の接続。マッチングサービス感。</div>
+      </article>
+
+      <article class="card">
+        <div class="label">10 / Short Strong</div>
+        <div class="logo">
+          <div class="wordmark"><span class="main">SES SEND</span><span class="sub">Auto</span></div>
+        </div>
+        <div class="desc">短く強い。ロゴっぽさは一番出る。</div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

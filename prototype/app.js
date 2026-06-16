@@ -375,10 +375,10 @@ function renderOverview() {
   const selectedBatch = batches.find((batch) => batch.request.id === state.selectedRequestId) || batches[0];
   return `
     <div class="metrics">
-      <div class="metric"><span>マッチング数</span><strong>${matchCount}</strong></div>
-      <div class="metric"><span>未送信</span><strong>${unsentCount}</strong></div>
-      <div class="metric"><span>本日の提案数</span><strong>${histories.length}</strong></div>
-      <div class="metric"><span>返信数</span><strong>${replies.length}</strong></div>
+      <div class="metric is-accent"><span>マッチング数</span><strong>${matchCount}</strong><small>提案候補あり</small></div>
+      <div class="metric is-danger"><span>未送信</span><strong>${unsentCount}</strong><small>要処理</small></div>
+      <div class="metric is-success"><span>送信済み</span><strong>${histories.length}</strong><small>本日の提案数</small></div>
+      <div class="metric"><span>返信通知</span><strong>${replies.length}</strong><small>確認待ち</small></div>
     </div>
     ${state.showMatchSettings ? renderMatchSettingsPanel() : ""}
     <div class="grid-2">
@@ -432,8 +432,8 @@ function renderMatchBatchList(batches) {
   return `<div class="card-list">${batches.filter(matchesQuery).map((batch) => {
     const ready = batch.sendable.length > 0;
     return `
-      <div class="action-card">
-        <div>${pill(ready ? "提案候補" : "確認", ready ? "" : "warn")}</div>
+      <div class="action-card ${ready ? "is-attention" : ""}">
+        <div>${pill(ready ? "未送信" : "確認", ready ? "danger" : "warn")}</div>
         <div>
           <strong>${batch.request.subject}</strong>
           <div class="meta">${batch.request.id} / 最高${batch.topScore}点 / ${batch.topTalent ? batch.topTalent.code : "候補なし"}</div>
