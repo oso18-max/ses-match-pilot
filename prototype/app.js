@@ -665,13 +665,53 @@ function renderSettings() {
   return `
     <div class="grid-2">
       <section class="panel">
-        <h2>会社別設定</h2>
+        <h2>送信設定</h2>
         <div class="form-grid">
-          <div class="field"><label>案件有効期限</label><select><option>${requestTtlDays}日</option><option>1日</option><option>3日</option><option>10日</option></select></div>
-          <div class="field"><label>人材有効期限</label><select><option>${talentTtlDays}日</option><option>1日</option><option>3日</option><option>10日</option></select></div>
-          <div class="field"><label>自動送信初期値</label><select><option>OFF</option><option>ON</option></select></div>
-          <div class="field"><label>送信上限</label><select><option>1日100社</option><option>1日300社</option></select></div>
-          <div class="field wide"><label>Drive保管方針</label><textarea readonly>案件添付は期限後もDB履歴として残す。Driveファイルは会社設定に応じてアーカイブ対象にする。</textarea></div>
+          <div class="field">
+            <label>自動送信</label>
+            <select onchange="state.autoSend = this.value === 'on'; render();">
+              <option value="off" ${state.autoSend ? "" : "selected"}>OFF: 人が確認して送信</option>
+              <option value="on" ${state.autoSend ? "selected" : ""}>ON: 条件を満たしたら自動送信</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>送信するマッチング点数</label>
+            <select onchange="state.sendThreshold = Number(this.value); render();">
+              <option value="80" ${state.sendThreshold === 80 ? "selected" : ""}>80点以上だけ送信</option>
+              <option value="70" ${state.sendThreshold === 70 ? "selected" : ""}>70点以上だけ送信</option>
+              <option value="60" ${state.sendThreshold === 60 ? "selected" : ""}>60点以上だけ送信</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>同一人材の送信上限</label>
+            <select onchange="state.maxSendPerTalent = Number(this.value); render();">
+              <option value="1" ${state.maxSendPerTalent === 1 ? "selected" : ""}>1人材につき1件まで</option>
+              <option value="3" ${state.maxSendPerTalent === 3 ? "selected" : ""}>1人材につき3件まで</option>
+              <option value="5" ${state.maxSendPerTalent === 5 ? "selected" : ""}>1人材につき5件まで</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>案件有効期限</label>
+            <select>
+              <option>${requestTtlDays}日</option>
+              <option>1日</option>
+              <option>3日</option>
+              <option>10日</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>人材有効期限</label>
+            <select>
+              <option>${talentTtlDays}日</option>
+              <option>1日</option>
+              <option>3日</option>
+              <option>10日</option>
+            </select>
+          </div>
+          <div class="field wide">
+            <label>送信条件</label>
+            <textarea readonly>マッチング点数が基準以上の候補だけ送信対象にする。同じ人材は、設定した件数を超えて送らない。</textarea>
+          </div>
         </div>
       </section>
       <section class="panel">
