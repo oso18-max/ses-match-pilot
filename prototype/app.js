@@ -1,647 +1,680 @@
 const state = {
-  view: "dashboard",
-  selected: null,
+  view: "overview",
   query: "",
-  todosDone: new Set()
+  selectedRequestId: "req_001",
+  selectedTalentId: "talent_001",
+  autoSend: false
 };
 
-const skills = [
-  { id: "java", name: "Java", category: "言語", aliases: ["JAVA"] },
-  { id: "spring", name: "Spring Boot", category: "FW", aliases: ["Spring"] },
-  { id: "react", name: "React", category: "FW", aliases: ["React.js"] },
-  { id: "typescript", name: "TypeScript", category: "言語", aliases: ["TS"] },
-  { id: "aws", name: "AWS", category: "クラウド", aliases: ["Amazon Web Services"] },
-  { id: "postgresql", name: "PostgreSQL", category: "DB", aliases: ["Postgres"] },
-  { id: "python", name: "Python", category: "言語", aliases: ["Py"] },
-  { id: "pm", name: "PM", category: "役割", aliases: ["Project Manager"] }
-];
+const requestTtlDays = 7;
+const talentTtlDays = 7;
 
-const projects = [
+const skillSheets = [
   {
-    id: "project_001",
-    name: "販売管理システム刷新",
+    id: "talent_001",
+    code: "engineer_001",
     role: "Javaバックエンド",
-    unitMin: 60,
-    unitMax: 72,
-    location: "東京",
-    workStyle: "週3リモート",
-    start: "即日",
-    flow: "エンド直",
-    interviewCount: 1,
-    status: "募集中",
-    owner: "sales_001",
-    deadline: "今日",
-    requiredSkills: ["java", "spring", "postgresql"],
-    niceSkills: ["aws"],
-    nextAction: "候補人材を2名選定"
-  },
-  {
-    id: "project_002",
-    name: "SaaS管理画面フロント開発",
-    role: "Reactフロント",
-    unitMin: 65,
-    unitMax: 78,
-    location: "大阪",
-    workStyle: "フルリモート",
-    start: "来月",
-    flow: "一次請け",
-    interviewCount: 2,
-    status: "選考中",
-    owner: "sales_002",
-    deadline: "明日",
-    requiredSkills: ["react", "typescript"],
-    niceSkills: ["aws"],
-    nextAction: "面談結果を確認"
-  },
-  {
-    id: "project_003",
-    name: "分析基盤バッチ改修",
-    role: "Pythonデータ処理",
-    unitMin: 58,
-    unitMax: 70,
-    location: "福岡",
-    workStyle: "常駐",
-    start: "翌々月",
-    flow: "二次請け",
-    interviewCount: 1,
-    status: "要件確認中",
-    owner: "sales_001",
-    deadline: "期限未設定",
-    requiredSkills: ["python", "postgresql"],
-    niceSkills: ["aws"],
-    nextAction: "必須スキル年数を確認"
-  }
-];
-
-const talents = [
-  {
-    id: "engineer_001",
-    role: "Javaエンジニア",
-    status: "提案可",
+    sourceFile: "engineer_001_skill.xlsx",
+    fileType: "Excel",
+    skills: ["Java", "Spring Boot", "PostgreSQL", "AWS"],
     unit: 68,
     available: "即日",
     location: "東京",
-    workStyle: "リモート希望",
-    interviewable: "今週可",
-    lastContact: "昨日",
-    owner: "sales_001",
-    skills: [
-      { id: "java", years: 5, level: "実務主力" },
-      { id: "spring", years: 4, level: "実務主力" },
-      { id: "postgresql", years: 3, level: "実務可" }
-    ],
-    nextAction: "project_001へ提案検討"
+    workStyle: "週3リモート可",
+    updatedAt: "2026-06-16",
+    validUntil: "2026-06-23",
+    status: "提案可"
   },
   {
-    id: "engineer_002",
-    role: "フロントエンド",
-    status: "面談中",
+    id: "talent_002",
+    code: "engineer_002",
+    role: "Reactフロント",
+    sourceFile: "engineer_002_profile.docx",
+    fileType: "Word",
+    skills: ["React", "TypeScript", "Next.js", "AWS"],
     unit: 72,
     available: "来月",
     location: "大阪",
     workStyle: "フルリモート可",
-    interviewable: "来週可",
-    lastContact: "3日前",
-    owner: "sales_002",
-    skills: [
-      { id: "react", years: 4, level: "実務主力" },
-      { id: "typescript", years: 3, level: "実務主力" },
-      { id: "aws", years: 1, level: "補助" }
-    ],
-    nextAction: "面談結果待ち"
+    updatedAt: "2026-06-15",
+    validUntil: "2026-06-22",
+    status: "提案可"
   },
   {
-    id: "engineer_003",
-    role: "データエンジニア",
-    status: "確認中",
+    id: "talent_003",
+    code: "engineer_003",
+    role: "Pythonデータ処理",
+    sourceFile: "engineer_003_resume.pdf",
+    fileType: "テキストPDF",
+    skills: ["Python", "SQL", "PostgreSQL", "ETL"],
     unit: 66,
     available: "翌々月",
     location: "福岡",
     workStyle: "常駐可",
-    interviewable: "未確認",
-    lastContact: "10日前",
-    owner: "sales_001",
-    skills: [
-      { id: "python", years: 5, level: "実務主力" },
-      { id: "postgresql", years: 4, level: "実務主力" }
-    ],
-    nextAction: "面談可能日を確認"
+    updatedAt: "2026-06-10",
+    validUntil: "2026-06-17",
+    status: "期限注意"
   }
 ];
 
-const proposals = [
+const incomingRequests = [
   {
-    id: "proposal_001",
-    projectId: "project_002",
-    talentId: "engineer_002",
-    sentTo: "company_002",
-    sentAt: "昨日",
-    status: "返答待ち",
-    due: "今日",
-    result: "未確定",
-    reason: "React/TypeScript一致",
-    nextAction: "返答確認"
-  }
-];
-
-const interviews = [
+    id: "req_001",
+    receivedAt: "2026-06-17 09:12",
+    fromCompany: "company_101",
+    fromAddress: "bp101@example.invalid",
+    subject: "【急募】Java/Spring 案件 即日 70万円",
+    attachment: "java_spring_project.xlsx",
+    fileType: "Excel",
+    extracted: {
+      role: "Javaバックエンド",
+      required: ["Java", "Spring Boot", "PostgreSQL"],
+      nice: ["AWS"],
+      unitMax: 70,
+      start: "即日",
+      location: "東京",
+      workStyle: "週3リモート"
+    },
+    validUntil: "2026-06-24",
+    status: "マッチング済み"
+  },
   {
-    id: "interview_001",
-    projectId: "project_002",
-    talentId: "engineer_002",
-    at: "明日 14:00",
-    format: "オンライン",
-    status: "確定",
-    result: "未実施",
-    feedback: "未入力",
-    nextAction: "前日確認"
+    id: "req_002",
+    receivedAt: "2026-06-17 10:05",
+    fromCompany: "company_203",
+    fromAddress: "bp203@example.invalid",
+    subject: "React 管理画面 フルリモート 来月開始",
+    attachment: "react_requirement.docx",
+    fileType: "Word",
+    extracted: {
+      role: "Reactフロント",
+      required: ["React", "TypeScript"],
+      nice: ["Next.js", "AWS"],
+      unitMax: 75,
+      start: "来月",
+      location: "大阪",
+      workStyle: "フルリモート"
+    },
+    validUntil: "2026-06-24",
+    status: "マッチング済み"
+  },
+  {
+    id: "req_003",
+    receivedAt: "2026-06-17 11:18",
+    fromCompany: "company_305",
+    fromAddress: "bp305@example.invalid",
+    subject: "Python バッチ改修 常駐案件",
+    attachment: "python_batch.pdf",
+    fileType: "テキストPDF",
+    extracted: {
+      role: "Pythonデータ処理",
+      required: ["Python", "SQL"],
+      nice: ["PostgreSQL"],
+      unitMax: 62,
+      start: "翌々月",
+      location: "福岡",
+      workStyle: "常駐"
+    },
+    validUntil: "2026-06-24",
+    status: "確認必要"
   }
 ];
 
-const activities = [
-  { at: "今日 09:00", target: "project_001", actor: "sales_001", action: "候補者確認", next: "engineer_001を提案候補へ" },
-  { at: "昨日 16:20", target: "proposal_001", actor: "sales_002", action: "提案送付", next: "返答待ち" },
-  { at: "昨日 11:10", target: "engineer_003", actor: "sales_001", action: "稼働時期確認", next: "面談可能日を確認" }
+const customers = [
+  {
+    id: "customer_001",
+    company: "株式会社アルファ",
+    person: "田中",
+    honorific: "様",
+    email: "tanaka@alpha.example.invalid",
+    sendable: true,
+    ngSkills: [],
+    ngConditions: [],
+    templateGroup: "標準"
+  },
+  {
+    id: "customer_002",
+    company: "ベータソリューションズ株式会社",
+    person: "採用ご担当者",
+    honorific: "様",
+    email: "ses@beta.example.invalid",
+    sendable: true,
+    ngSkills: ["常駐のみ"],
+    ngConditions: ["単価70万円超NG"],
+    templateGroup: "丁寧"
+  },
+  {
+    id: "customer_003",
+    company: "株式会社ガンマ",
+    person: "佐藤",
+    honorific: "様",
+    email: "sato@gamma.example.invalid",
+    sendable: false,
+    ngSkills: [],
+    ngConditions: ["送信停止中"],
+    templateGroup: "停止"
+  },
+  {
+    id: "customer_004",
+    company: "デルタテック株式会社",
+    person: "山本",
+    honorific: "様",
+    email: "yamamoto@delta.example.invalid",
+    sendable: true,
+    ngSkills: ["Python"],
+    ngConditions: [],
+    templateGroup: "標準"
+  }
 ];
 
-function skillName(id) {
-  return skills.find((skill) => skill.id === id)?.name || id;
-}
+const histories = [
+  {
+    id: "hist_001",
+    sentAt: "2026-06-16 15:20",
+    company: "株式会社アルファ",
+    email: "tanaka@alpha.example.invalid",
+    request: "Java/Spring 案件",
+    talent: "engineer_001",
+    status: "返信待ち",
+    subject: "Javaエンジニアのご提案"
+  },
+  {
+    id: "hist_002",
+    sentAt: "2026-06-16 16:10",
+    company: "ベータソリューションズ株式会社",
+    email: "ses@beta.example.invalid",
+    request: "React 管理画面",
+    talent: "engineer_002",
+    status: "返信あり",
+    subject: "React人材のご提案"
+  }
+];
 
-function projectById(id) {
-  return projects.find((project) => project.id === id);
-}
+const replies = [
+  {
+    id: "reply_001",
+    receivedAt: "2026-06-17 09:40",
+    from: "ses@beta.example.invalid",
+    subject: "Re: React人材のご提案",
+    linkedHistory: "hist_002",
+    detected: "メールアドレス + 件名一致",
+    nextAction: "面談候補日を送る"
+  },
+  {
+    id: "reply_002",
+    receivedAt: "2026-06-17 11:30",
+    from: "unknown@example.invalid",
+    subject: "Re: Java案件について",
+    linkedHistory: "未確定",
+    detected: "案件名らしき語句のみ一致",
+    nextAction: "手動確認"
+  }
+];
 
-function talentById(id) {
-  return talents.find((talent) => talent.id === id);
-}
+const templates = [
+  "いつもお世話になっております。下記人材をご提案いたします。",
+  "お世話になっております。貴社案件に近い人材がおりますのでご共有いたします。",
+  "いつもありがとうございます。条件に合いそうな技術者をご紹介いたします。",
+  "お世話になっております。直近稼働可能な候補者についてご連絡いたします。"
+];
 
-function normalizeText(value) {
+function normalize(value) {
   return String(value || "").toLowerCase();
 }
 
 function matchesQuery(record) {
   if (!state.query) return true;
-  return normalizeText(JSON.stringify(record)).includes(normalizeText(state.query));
+  return normalize(JSON.stringify(record)).includes(normalize(state.query));
 }
 
-function scoreMatch(project, talent) {
-  const talentSkillIds = talent.skills.map((skill) => skill.id);
-  const requiredMatches = project.requiredSkills.filter((id) => talentSkillIds.includes(id));
-  const niceMatches = project.niceSkills.filter((id) => talentSkillIds.includes(id));
-  const missing = project.requiredSkills.filter((id) => !talentSkillIds.includes(id));
-  const unitOk = talent.unit <= project.unitMax;
-  const startOk = project.start === talent.available || project.start === "即日" && talent.available === "即日";
-  const locationOk = project.workStyle.includes("リモート") || talent.location === project.location || talent.workStyle.includes("リモート");
-  const requiredOk = requiredMatches.length >= Math.ceil(project.requiredSkills.length * 0.7);
-  const cutoffOk = requiredOk && unitOk && locationOk;
-  const requiredScore = Math.round((requiredMatches.length / project.requiredSkills.length) * 30);
-  const niceScore = project.niceSkills.length ? Math.round((niceMatches.length / project.niceSkills.length) * 15) : 0;
-  const domainScore = talent.role.includes(project.role.split(/[ァ-ン]+|バック|フロント|データ/)[0]) ? 15 : 8;
-  const startScore = startOk ? 10 : 5;
-  const unitScore = unitOk ? 10 : 0;
-  const locationScore = locationOk ? 10 : 0;
-  const proposalScore = requiredOk ? 10 : 3;
-  const score = cutoffOk ? requiredScore + niceScore + domainScore + startScore + unitScore + locationScore + proposalScore : Math.min(39, requiredScore + niceScore + unitScore);
+function selectedRequest() {
+  return incomingRequests.find((item) => item.id === state.selectedRequestId) || incomingRequests[0];
+}
+
+function selectedTalent() {
+  return skillSheets.find((item) => item.id === state.selectedTalentId) || skillSheets[0];
+}
+
+function score(request, talent) {
+  const req = request.extracted;
+  const matchedRequired = req.required.filter((skill) => talent.skills.includes(skill));
+  const matchedNice = req.nice.filter((skill) => talent.skills.includes(skill));
+  const missing = req.required.filter((skill) => !talent.skills.includes(skill));
+  const unitOk = talent.unit <= req.unitMax;
+  const startOk = talent.available === req.start || req.start === "即日" && talent.available === "即日";
+  const locationOk = req.workStyle.includes("リモート") || talent.location === req.location || talent.workStyle.includes("リモート");
+  const cutoff = matchedRequired.length >= Math.ceil(req.required.length * 0.7) && unitOk && locationOk;
+  const scoreValue = cutoff
+    ? Math.round((matchedRequired.length / req.required.length) * 40)
+      + Math.round((matchedNice.length / Math.max(req.nice.length, 1)) * 15)
+      + (startOk ? 15 : 8)
+      + (unitOk ? 15 : 0)
+      + (locationOk ? 15 : 0)
+    : Math.min(39, matchedRequired.length * 12 + (unitOk ? 5 : 0));
   let rank = "除外";
-  if (cutoffOk && score >= 80) rank = "A";
-  else if (cutoffOk && score >= 60) rank = "B";
-  else if (cutoffOk && score >= 40) rank = "C";
+  if (cutoff && scoreValue >= 80) rank = "1位";
+  else if (cutoff && scoreValue >= 65) rank = "2位";
+  else if (cutoff && scoreValue >= 45) rank = "3位";
   return {
-    projectId: project.id,
+    requestId: request.id,
     talentId: talent.id,
-    score,
+    score: scoreValue,
     rank,
-    cutoffOk,
-    matchedRequired: requiredMatches.map(skillName),
-    missing: missing.map(skillName),
+    cutoff,
+    matchedRequired,
+    matchedNice,
+    missing,
     reasons: [
-      requiredMatches.length ? `必須一致: ${requiredMatches.map(skillName).join(" / ")}` : "必須一致なし",
-      niceMatches.length ? `尚可一致: ${niceMatches.map(skillName).join(" / ")}` : "尚可一致なし",
-      unitOk ? "単価レンジ内" : "単価超過",
-      locationOk ? "勤務地/リモート条件OK" : "勤務地条件NG"
+      matchedRequired.length ? `必須一致: ${matchedRequired.join(" / ")}` : "必須一致なし",
+      matchedNice.length ? `尚可一致: ${matchedNice.join(" / ")}` : "尚可一致なし",
+      unitOk ? "単価OK" : "単価NG",
+      locationOk ? "勤務地/リモートOK" : "勤務地NG"
     ],
-    risk: missing.length ? `不足: ${missing.map(skillName).join(" / ")}` : "大きな不足なし"
+    warning: missing.length ? `不足: ${missing.join(" / ")}` : "大きな不足なし"
   };
 }
 
-function allMatches() {
-  return projects.flatMap((project) => talents.map((talent) => scoreMatch(project, talent)))
+function rankedMatches(request = selectedRequest()) {
+  return skillSheets
+    .map((talent) => score(request, talent))
     .sort((a, b) => b.score - a.score);
 }
 
-function buildTodos() {
-  const base = [
-    { id: "todo_001", due: "今日", type: "提案", target: "project_001", text: "Java案件に候補人材を選定", priority: "高" },
-    { id: "todo_002", due: "今日", type: "返答確認", target: "proposal_001", text: "提案後の返答を確認", priority: "高" },
-    { id: "todo_003", due: "明日", type: "面談", target: "interview_001", text: "面談前の条件確認", priority: "中" },
-    { id: "todo_004", due: "期限未設定", type: "確認", target: "project_003", text: "必須スキル年数を確認", priority: "中" },
-    { id: "todo_005", due: "期限超過", type: "人材", target: "engineer_003", text: "面談可能日を確認", priority: "高" }
-  ];
-  return base.map((todo) => ({ ...todo, done: state.todosDone.has(todo.id) }));
-}
-
-function setView(view) {
-  state.view = view;
-  state.selected = null;
-  document.querySelectorAll(".nav-item").forEach((button) => {
-    button.classList.toggle("is-active", button.dataset.view === view);
+function sendTargets(request = selectedRequest(), talent = selectedTalent()) {
+  return customers.map((customer) => {
+    const blocked = [];
+    if (!customer.sendable) blocked.push("送信停止");
+    if (customer.ngSkills.some((ng) => talent.skills.includes(ng) || request.extracted.workStyle.includes(ng))) blocked.push("NG条件");
+    if (customer.ngConditions.includes("単価70万円超NG") && talent.unit > 70) blocked.push("単価NG");
+    return {
+      ...customer,
+      blocked,
+      canSend: blocked.length === 0
+    };
   });
-  render();
 }
 
-function setSelected(id) {
-  state.selected = id;
-  render();
-}
+function templateFor(customer, request, talent) {
+  const body = templates[Math.abs(customer.company.length + talent.code.length) % templates.length];
+  return `${customer.company}
+${customer.person}${customer.honorific}
 
-function markTodo(id) {
-  if (state.todosDone.has(id)) {
-    state.todosDone.delete(id);
-  } else {
-    state.todosDone.add(id);
-  }
-  render();
+${body}
+
+【候補者】${talent.code}
+【職種】${talent.role}
+【主要スキル】${talent.skills.join(" / ")}
+【希望単価】${talent.unit}万円
+【稼働】${talent.available}
+
+案件「${request.subject}」の条件に近い候補としてご提案です。
+ご確認のほどよろしくお願いいたします。`;
 }
 
 function pill(text, type = "") {
   return `<span class="pill ${type}">${text}</span>`;
 }
 
-function skillPills(ids) {
-  return `<div class="pill-list">${ids.map((id) => pill(skillName(id))).join("")}</div>`;
+function pills(list, type = "") {
+  return `<div class="pill-list">${list.map((item) => pill(item, type)).join("")}</div>`;
 }
 
-function renderTable(headers, rows) {
-  return `
-    <div class="table-wrap">
-      <table>
-        <thead><tr>${headers.map((header) => `<th>${header}</th>`).join("")}</tr></thead>
-        <tbody>${rows.join("")}</tbody>
-      </table>
-    </div>
-  `;
+function table(headers, rows) {
+  return `<div class="table-wrap"><table><thead><tr>${headers.map((h) => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div>`;
 }
 
-function renderDashboard() {
-  const todos = buildTodos();
-  const matches = allMatches();
+function setView(view) {
+  state.view = view;
+  document.querySelectorAll(".nav-item").forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.view === view);
+  });
+  render();
+}
+
+function setRequest(id) {
+  state.selectedRequestId = id;
+  render();
+}
+
+function setTalent(id) {
+  state.selectedTalentId = id;
+  render();
+}
+
+function toggleAutoSend() {
+  state.autoSend = !state.autoSend;
+  render();
+}
+
+function renderOverview() {
   return `
     <div class="metrics">
-      <div class="metric"><span>未対応タスク</span><strong>${todos.filter((todo) => !todo.done).length}</strong></div>
-      <div class="metric"><span>A/B候補</span><strong>${matches.filter((match) => ["A", "B"].includes(match.rank)).length}</strong></div>
-      <div class="metric"><span>提案中</span><strong>${proposals.length}</strong></div>
-      <div class="metric"><span>面談予定</span><strong>${interviews.length}</strong></div>
-    </div>
-    <div class="grid-2">
-      <section class="panel">
-        <h2>今日の優先対応</h2>
-        ${renderTodoList(todos.slice(0, 4))}
-      </section>
-      <section class="panel">
-        <h2>高スコア候補</h2>
-        ${renderMatchCards(matches.slice(0, 4))}
-      </section>
+      <div class="metric"><span>本日受信案件</span><strong>${incomingRequests.length}</strong></div>
+      <div class="metric"><span>登録スキルシート</span><strong>${skillSheets.length}</strong></div>
+      <div class="metric"><span>送信可能企業</span><strong>${customers.filter((c) => c.sendable).length}</strong></div>
+      <div class="metric"><span>返信検知</span><strong>${replies.length}</strong></div>
     </div>
     <section class="panel">
-      <h2>直近活動</h2>
-      ${renderActivityList(activities)}
+      <h2>作りたいサービスの流れ</h2>
+      <div class="flow">
+        <div class="flow-step"><span>1</span><strong>案件メール受信</strong><p class="muted">本文と添付を取得</p></div>
+        <div class="flow-step"><span>2</span><strong>AIなしで読取</strong><p class="muted">Excel/Word/CSV/テキストPDF</p></div>
+        <div class="flow-step"><span>3</span><strong>スキルシート照合</strong><p class="muted">候補者1〜3位</p></div>
+        <div class="flow-step"><span>4</span><strong>個別メール生成</strong><p class="muted">BCCなし・会社ごと</p></div>
+        <div class="flow-step"><span>5</span><strong>履歴/返信管理</strong><p class="muted">会社名・メールで紐づけ</p></div>
+      </div>
     </section>
+    <div class="grid-2">
+      <section class="panel">
+        <h2>今日の案件メール</h2>
+        ${renderRequestCards(incomingRequests)}
+      </section>
+      <section class="panel">
+        <h2>上位マッチング</h2>
+        ${renderMatchCards(rankedMatches().slice(0, 3))}
+      </section>
+    </div>
   `;
 }
 
-function renderTodoList(todos) {
-  return `<div class="todo-list">${todos.map((todo) => `
-    <div class="todo-item ${todo.done ? "done" : ""}">
+function renderRequestCards(list) {
+  return `<div class="card-list">${list.filter(matchesQuery).map((request) => `
+    <div class="action-card">
+      <div>${pill(request.fileType, "blue")}</div>
       <div>
-        ${pill(todo.due, todo.due === "期限超過" ? "is-danger" : todo.due === "今日" ? "is-warn" : "is-blue")}
+        <strong>${request.subject}</strong>
+        <div class="meta">${request.receivedAt} / ${request.attachment}</div>
+        <div class="meta">${request.extracted.required.join(" / ")} / 上限${request.extracted.unitMax}万円 / ${request.extracted.workStyle}</div>
       </div>
-      <div>
-        <strong>${todo.text}</strong>
-        <div class="todo-meta">${todo.type} / ${todo.target} / 優先度 ${todo.priority}</div>
-      </div>
-      <button class="small-action" onclick="markTodo('${todo.id}')">${todo.done ? "戻す" : "完了"}</button>
+      <button class="small-action" onclick="setRequest('${request.id}'); setView('matches')">照合</button>
     </div>
   `).join("")}</div>`;
 }
 
-function renderTodos() {
-  return `
-    <section class="panel">
-      <h2>今日やること</h2>
-      <p class="muted">期限超過、本日対応、面談前後、結果待ち、最終接触から日数経過を拾う想定です。</p>
-      ${renderTodoList(buildTodos())}
-    </section>
-  `;
-}
-
-function renderProjects() {
-  const list = projects.filter(matchesQuery);
-  const selected = projectById(state.selected) || list[0];
+function renderInbox() {
   return `
     <div class="grid-2">
       <section class="panel">
         <div class="toolbar">
-          <select aria-label="案件ステータス">
-            <option>全ステータス</option>
-            <option>募集中</option>
-            <option>選考中</option>
-            <option>要件確認中</option>
-          </select>
-          <button class="ghost-action" onclick="setView('matches')">候補を見る</button>
+          ${pill("メール本文", "blue")}
+          ${pill("添付Excel/Word/PDF", "blue")}
+          ${pill("AIなし抽出", "gray")}
         </div>
-        ${renderTable(
-          ["案件", "条件", "必須スキル", "状況", "操作"],
-          list.map((project) => `
+        <h2>案件メール</h2>
+        ${table(
+          ["受信", "件名/添付", "抽出条件", "状態", "操作"],
+          incomingRequests.filter(matchesQuery).map((request) => `
             <tr>
-              <td><strong>${project.name}</strong><br><span class="muted">${project.id} / ${project.role}</span></td>
-              <td>${project.unitMin}-${project.unitMax}万円<br>${project.location} / ${project.workStyle}<br>${project.start}</td>
-              <td>${skillPills(project.requiredSkills)}</td>
-              <td><span class="status ${project.status === "募集中" ? "ok" : "warn"}">${project.status}</span><br><span class="muted">${project.nextAction}</span></td>
-              <td><button class="small-action" onclick="setSelected('${project.id}')">詳細</button></td>
+              <td>${request.receivedAt}<br><span class="muted">${request.fromAddress}</span></td>
+              <td><strong>${request.subject}</strong><br>${request.attachment} / ${request.fileType}</td>
+              <td>${request.extracted.required.join(" / ")}<br>${request.extracted.location} / ${request.extracted.workStyle} / ${request.extracted.unitMax}万円</td>
+              <td><span class="status ${request.status === "確認必要" ? "warn" : "ok"}">${request.status}</span><br><span class="muted">有効期限: ${request.validUntil}</span></td>
+              <td><button class="small-action" onclick="setRequest('${request.id}'); setView('matches')">候補を見る</button></td>
             </tr>
           `)
         )}
       </section>
-      ${renderProjectDetail(selected)}
-    </div>
-  `;
-}
-
-function renderProjectDetail(project) {
-  if (!project) return `<section class="detail-panel"><h2>案件詳細</h2><p>該当なし</p></section>`;
-  const candidates = allMatches().filter((match) => match.projectId === project.id).slice(0, 3);
-  return `
-    <section class="detail-panel">
-      <h2>案件詳細</h2>
-      <div class="detail-grid">
-        <div class="detail-cell"><span>案件ID</span>${project.id}</div>
-        <div class="detail-cell"><span>担当</span>${project.owner}</div>
-        <div class="detail-cell"><span>単価</span>${project.unitMin}-${project.unitMax}万円</div>
-        <div class="detail-cell"><span>商流</span>${project.flow}</div>
-        <div class="detail-cell"><span>面談回数</span>${project.interviewCount}回</div>
-        <div class="detail-cell"><span>次アクション</span>${project.nextAction}</div>
-      </div>
-      <h3>必須スキル</h3>
-      ${skillPills(project.requiredSkills)}
-      <h3>候補人材</h3>
-      ${renderMatchCards(candidates)}
-    </section>
-  `;
-}
-
-function renderTalents() {
-  const list = talents.filter(matchesQuery);
-  const selected = talentById(state.selected) || list[0];
-  return `
-    <div class="grid-2">
-      <section class="panel">
-        ${renderTable(
-          ["人材", "希望条件", "スキル", "状況", "操作"],
-          list.map((talent) => `
-            <tr>
-              <td><strong>${talent.id}</strong><br><span class="muted">${talent.role}</span></td>
-              <td>${talent.unit}万円 / ${talent.available}<br>${talent.location} / ${talent.workStyle}</td>
-              <td>${skillPills(talent.skills.map((skill) => skill.id))}</td>
-              <td><span class="status ${talent.status === "提案可" ? "ok" : "warn"}">${talent.status}</span><br><span class="muted">${talent.nextAction}</span></td>
-              <td><button class="small-action" onclick="setSelected('${talent.id}')">詳細</button></td>
-            </tr>
-          `)
-        )}
+      <section class="detail-panel">
+        <h2>読取対象</h2>
+        <div class="card-list">
+          <div class="action-card"><div>${pill("OK")}</div><div><strong>Excel / CSV</strong><div class="meta">セルの文字・数値・日付を読む</div></div></div>
+          <div class="action-card"><div>${pill("OK")}</div><div><strong>Word</strong><div class="meta">文書内テキストを読む</div></div></div>
+          <div class="action-card"><div>${pill("OK")}</div><div><strong>テキストPDF</strong><div class="meta">コピー可能な文字を読む</div></div></div>
+          <div class="action-card"><div>${pill("対象外", "danger")}</div><div><strong>画像PDF / スキャンPDF</strong><div class="meta">OCRまたはAI追加が必要</div></div></div>
+        </div>
       </section>
-      ${renderTalentDetail(selected)}
     </div>
   `;
 }
 
-function renderTalentDetail(talent) {
-  if (!talent) return `<section class="detail-panel"><h2>人材詳細</h2><p>該当なし</p></section>`;
-  const candidates = allMatches().filter((match) => match.talentId === talent.id).slice(0, 3);
+function renderSheets() {
   return `
-    <section class="detail-panel">
-      <h2>人材詳細</h2>
-      <div class="detail-grid">
-        <div class="detail-cell"><span>仮ID</span>${talent.id}</div>
-        <div class="detail-cell"><span>担当</span>${talent.owner}</div>
-        <div class="detail-cell"><span>面談可能日</span>${talent.interviewable}</div>
-        <div class="detail-cell"><span>最終接触</span>${talent.lastContact}</div>
-        <div class="detail-cell"><span>ステータス</span>${talent.status}</div>
-        <div class="detail-cell"><span>次アクション</span>${talent.nextAction}</div>
+    <section class="panel">
+      <div class="toolbar">
+        <button class="ghost-action">Drive取込予定</button>
+        <button class="ghost-action">CSV/Excel登録予定</button>
+        <span class="muted">初期版はスキルシート保管場所の設計確認です。</span>
       </div>
-      <h3>スキル</h3>
-      ${renderTable(
-        ["スキル", "経験年数", "レベル"],
-        talent.skills.map((skill) => `<tr><td>${skillName(skill.id)}</td><td>${skill.years}年</td><td>${skill.level}</td></tr>`)
+      <h2>スキルシート保管</h2>
+      ${table(
+        ["仮ID", "ファイル", "スキル", "条件", "有効期限", "操作"],
+        skillSheets.filter(matchesQuery).map((talent) => `
+          <tr>
+            <td><strong>${talent.code}</strong><br>${talent.role}</td>
+            <td>${talent.sourceFile}<br><span class="muted">${talent.fileType}</span></td>
+            <td>${pills(talent.skills)}</td>
+            <td>${talent.unit}万円 / ${talent.available}<br>${talent.location} / ${talent.workStyle}</td>
+            <td><span class="status ${talent.status === "期限注意" ? "warn" : "ok"}">${talent.validUntil}</span><br>${talent.status}</td>
+            <td><button class="small-action" onclick="setTalent('${talent.id}'); setView('send')">提案文へ</button></td>
+          </tr>
+        `)
       )}
-      <h3>候補案件</h3>
-      ${renderMatchCards(candidates)}
     </section>
   `;
 }
 
 function renderMatchCards(matches) {
-  return `<div class="todo-list">${matches.map((match) => {
-    const project = projectById(match.projectId);
-    const talent = talentById(match.talentId);
-    const rankClass = match.rank === "A" ? "a" : match.rank === "B" ? "b" : match.rank === "C" ? "c" : "x";
+  return `<div class="card-list">${matches.map((match) => {
+    const request = incomingRequests.find((item) => item.id === match.requestId);
+    const talent = skillSheets.find((item) => item.id === match.talentId);
+    const rankClass = match.rank === "1位" ? "a" : match.rank === "2位" ? "b" : "c";
     return `
-      <div class="todo-item">
-        <div><span class="rank ${rankClass}">${match.rank}</span><br><span class="muted">${match.score}点</span></div>
+      <div class="action-card">
+        <div><span class="rank ${rankClass}">${match.rank}</span><div class="meta">${match.score}点</div></div>
         <div>
-          <strong>${project.name} × ${talent.id}</strong>
-          <div class="todo-meta">${match.reasons.join(" / ")}</div>
-          <div class="todo-meta">${match.risk}</div>
+          <strong>${request.subject}</strong>
+          <div>${talent.code} / ${talent.role}</div>
+          <div class="meta">${match.reasons.join(" / ")}</div>
+          <div class="meta">${match.warning}</div>
         </div>
-        <button class="small-action" onclick="setView('proposals')">提案へ</button>
+        <button class="small-action" onclick="setTalent('${talent.id}'); setView('send')">送信準備</button>
       </div>
     `;
   }).join("")}</div>`;
 }
 
 function renderMatches() {
-  const list = allMatches().filter(matchesQuery);
+  const request = selectedRequest();
+  const matches = rankedMatches(request);
+  return `
+    <div class="grid-2">
+      <section class="panel">
+        <h2>案件メール起点のマッチング</h2>
+        <p class="muted">人が毎回選ぶのではなく、受信案件から自動で候補者1〜3位を出す想定です。</p>
+        ${renderRequestCards([request])}
+        <h3>候補者ランキング</h3>
+        ${renderMatchCards(matches)}
+      </section>
+      <section class="detail-panel">
+        <h2>抽出された案件条件</h2>
+        <div class="card-list">
+          <div><strong>職種</strong><div class="meta">${request.extracted.role}</div></div>
+          <div><strong>必須</strong>${pills(request.extracted.required)}</div>
+          <div><strong>尚可</strong>${pills(request.extracted.nice, "blue")}</div>
+          <div><strong>条件</strong><div class="meta">${request.extracted.unitMax}万円 / ${request.extracted.start} / ${request.extracted.location} / ${request.extracted.workStyle}</div></div>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function renderCustomers() {
   return `
     <section class="panel">
-      <h2>マッチング候補</h2>
-      <p class="muted">足切り、100点配点、A/B/C/除外、理由保存を確認する画面です。</p>
-      ${renderTable(
-        ["ランク", "案件", "人材", "理由", "不足/除外", "操作"],
-        list.map((match) => {
-          const project = projectById(match.projectId);
-          const talent = talentById(match.talentId);
-          const rankClass = match.rank === "A" ? "a" : match.rank === "B" ? "b" : match.rank === "C" ? "c" : "x";
-          return `
-            <tr>
-              <td><span class="rank ${rankClass}">${match.rank}</span><br>${match.score}点</td>
-              <td><strong>${project.name}</strong><br><span class="muted">${project.id}</span></td>
-              <td><strong>${talent.id}</strong><br><span class="muted">${talent.role}</span></td>
-              <td>${match.reasons.join("<br>")}</td>
-              <td>${match.risk}</td>
-              <td><button class="small-action">理由保存</button></td>
-            </tr>
-          `;
-        })
+      <div class="toolbar">
+        <button class="ghost-action">CSVインポート予定</button>
+        <button class="ghost-action">列名自動認識予定</button>
+        <span class="muted">会社名、担当者、メール、NG条件を先に登録します。</span>
+      </div>
+      <h2>送信先マスタ</h2>
+      ${table(
+        ["会社", "宛名", "メール", "送信可否", "NG条件", "テンプレ"],
+        customers.filter(matchesQuery).map((customer) => `
+          <tr>
+            <td><strong>${customer.company}</strong><br>${customer.id}</td>
+            <td>${customer.person}${customer.honorific}</td>
+            <td>${customer.email}</td>
+            <td><span class="status ${customer.sendable ? "ok" : "bad"}">${customer.sendable ? "送信可" : "停止"}</span></td>
+            <td>${[...customer.ngSkills, ...customer.ngConditions].length ? pills([...customer.ngSkills, ...customer.ngConditions], "warn") : pill("なし", "gray")}</td>
+            <td>${customer.templateGroup}</td>
+          </tr>
+        `)
       )}
     </section>
   `;
 }
 
-function renderProposals() {
+function renderSend() {
+  const request = selectedRequest();
+  const best = rankedMatches(request).find((match) => match.rank !== "除外");
+  const talent = selectedTalent() || skillSheets.find((item) => item.id === best.talentId);
+  const targets = sendTargets(request, talent);
+  const firstTarget = targets.find((target) => target.canSend) || targets[0];
   return `
     <div class="grid-2">
       <section class="panel">
-        <h2>提案管理</h2>
-        ${renderTable(
-          ["提案", "案件/人材", "状況", "次アクション"],
-          proposals.map((proposal) => `
+        <div class="toolbar">
+          <button class="${state.autoSend ? "primary-action" : "ghost-action"}" onclick="toggleAutoSend()">自動送信 ${state.autoSend ? "ON" : "OFF"}</button>
+          <span class="muted">初期値はOFF。ONなら条件OKの会社へ個別送信する想定です。</span>
+        </div>
+        <h2>BCCなし個別送信</h2>
+        ${table(
+          ["送信先", "宛名", "判定", "理由", "操作"],
+          targets.map((target) => `
             <tr>
-              <td><strong>${proposal.id}</strong><br>${proposal.sentAt} / ${proposal.sentTo}</td>
-              <td>${projectById(proposal.projectId).name}<br>${proposal.talentId}</td>
-              <td><span class="status warn">${proposal.status}</span><br>${proposal.result}</td>
-              <td>${proposal.nextAction}<br><span class="muted">期限: ${proposal.due}</span></td>
+              <td><strong>${target.company}</strong><br>${target.email}</td>
+              <td>${target.person}${target.honorific}</td>
+              <td><span class="status ${target.canSend ? "ok" : "bad"}">${target.canSend ? "送信対象" : "除外"}</span></td>
+              <td>${target.blocked.length ? pills(target.blocked, "danger") : pill("NGなし")}</td>
+              <td><button class="small-action" ${target.canSend ? "" : "disabled"}>個別メール作成</button></td>
             </tr>
           `)
         )}
       </section>
-      <section class="form-panel">
-        <h2>提案作成フォーム</h2>
-        ${renderActionForm("proposal")}
+      <section class="detail-panel">
+        <h2>メール文面プレビュー</h2>
+        <p class="muted">会社名・担当者名を差し込み、1社ずつToで送る想定です。</p>
+        <div class="mail-preview">${templateFor(firstTarget, request, talent)}</div>
       </section>
     </div>
   `;
 }
 
-function renderInterviews() {
-  return `
-    <div class="grid-2">
-      <section class="panel">
-        <h2>面談管理</h2>
-        ${renderTable(
-          ["面談", "案件/人材", "状況", "次アクション"],
-          interviews.map((interview) => `
-            <tr>
-              <td><strong>${interview.id}</strong><br>${interview.at} / ${interview.format}</td>
-              <td>${projectById(interview.projectId).name}<br>${interview.talentId}</td>
-              <td><span class="status ok">${interview.status}</span><br>${interview.result}</td>
-              <td>${interview.nextAction}<br><span class="muted">FB: ${interview.feedback}</span></td>
-            </tr>
-          `)
-        )}
-      </section>
-      <section class="form-panel">
-        <h2>面談結果入力</h2>
-        ${renderActionForm("interview")}
-      </section>
-    </div>
-  `;
-}
-
-function renderActionForm(type) {
-  return `
-    <form class="form-grid" onsubmit="event.preventDefault(); alert('仮プロトタイプ: 保存処理は未接続です');">
-      <div class="field">
-        <label>対象案件</label>
-        <select>${projects.map((project) => `<option>${project.id} / ${project.name}</option>`).join("")}</select>
-      </div>
-      <div class="field">
-        <label>対象人材</label>
-        <select>${talents.map((talent) => `<option>${talent.id} / ${talent.role}</option>`).join("")}</select>
-      </div>
-      <div class="field">
-        <label>ステータス</label>
-        <select>
-          <option>下書き</option>
-          <option>送付済</option>
-          <option>返答待ち</option>
-          <option>面談調整中</option>
-          <option>結果待ち</option>
-          <option>見送り</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>次アクション期限</label>
-        <input type="date">
-      </div>
-      <div class="field wide">
-        <label>${type === "proposal" ? "提案理由/懸念点" : "面談FB/次対応"}</label>
-        <textarea placeholder="個人情報や実データは入力しない"></textarea>
-      </div>
-      <div class="wide">
-        <button class="primary-action">仮保存</button>
-      </div>
-    </form>
-  `;
-}
-
-function renderActivityList(list) {
-  return `<div class="activity-list">${list.map((item) => `
-    <div class="activity-item">
-      <div class="todo-meta">${item.at}</div>
-      <div>
-        <strong>${item.action}</strong>
-        <div class="todo-meta">${item.target} / ${item.actor}</div>
-      </div>
-      <div class="todo-meta">次: ${item.next}</div>
-    </div>
-  `).join("")}</div>`;
-}
-
-function renderActivity() {
+function renderHistory() {
   return `
     <section class="panel">
-      <h2>活動履歴</h2>
-      <p class="muted">ログには本文や個人情報を残さず、仮ID・操作種別・日時・次アクションを保存する想定です。</p>
-      ${renderActivityList(activities)}
+      <h2>送信履歴</h2>
+      <p class="muted">どの会社へ、どの案件で、どの人材を、いつ送ったかを検索できます。</p>
+      ${table(
+        ["送信日時", "会社/メール", "案件", "人材", "状態", "件名"],
+        histories.filter(matchesQuery).map((item) => `
+          <tr>
+            <td>${item.sentAt}</td>
+            <td><strong>${item.company}</strong><br>${item.email}</td>
+            <td>${item.request}</td>
+            <td>${item.talent}</td>
+            <td><span class="status ${item.status === "返信あり" ? "ok" : "warn"}">${item.status}</span></td>
+            <td>${item.subject}</td>
+          </tr>
+        `)
+      )}
     </section>
+  `;
+}
+
+function renderReplies() {
+  return `
+    <section class="panel">
+      <h2>返信検知</h2>
+      <p class="muted">返信元メールアドレス、件名、案件名らしき文字から過去の送信履歴に紐づける想定です。</p>
+      ${table(
+        ["受信", "返信元/件名", "紐づけ", "検知理由", "次アクション"],
+        replies.filter(matchesQuery).map((reply) => `
+          <tr>
+            <td>${reply.receivedAt}</td>
+            <td>${reply.from}<br><strong>${reply.subject}</strong></td>
+            <td>${reply.linkedHistory}</td>
+            <td>${reply.detected}</td>
+            <td>${reply.nextAction}</td>
+          </tr>
+        `)
+      )}
+    </section>
+  `;
+}
+
+function renderSettings() {
+  return `
+    <div class="grid-2">
+      <section class="panel">
+        <h2>会社別設定</h2>
+        <div class="form-grid">
+          <div class="field"><label>案件有効期限</label><select><option>${requestTtlDays}日</option><option>1日</option><option>3日</option><option>10日</option></select></div>
+          <div class="field"><label>人材有効期限</label><select><option>${talentTtlDays}日</option><option>1日</option><option>3日</option><option>10日</option></select></div>
+          <div class="field"><label>自動送信初期値</label><select><option>OFF</option><option>ON</option></select></div>
+          <div class="field"><label>送信上限</label><select><option>1日100社</option><option>1日300社</option></select></div>
+          <div class="field wide"><label>Drive保管方針</label><textarea readonly>案件添付は期限後もDB履歴として残す。Driveファイルは会社設定に応じてアーカイブ対象にする。</textarea></div>
+        </div>
+      </section>
+      <section class="panel">
+        <h2>サブスク制御</h2>
+        <div class="card-list">
+          <div class="action-card"><div>${pill("支払中")}</div><div><strong>全機能利用可</strong><div class="meta">取込、照合、送信、履歴検索</div></div></div>
+          <div class="action-card"><div>${pill("未払い", "warn")}</div><div><strong>取込/送信停止</strong><div class="meta">閲覧のみへ制限</div></div></div>
+          <div class="action-card"><div>${pill("解約", "danger")}</div><div><strong>ログイン停止</strong><div class="meta">データ削除は即時にしない</div></div></div>
+        </div>
+      </section>
+    </div>
   `;
 }
 
 function updateTitle() {
   const titles = {
-    dashboard: "ダッシュボード",
-    todos: "今日やること",
-    projects: "案件",
-    talents: "人材",
+    overview: "全体像",
+    inbox: "案件メール",
+    sheets: "スキルシート",
     matches: "マッチング",
-    proposals: "提案管理",
-    interviews: "面談管理",
-    activity: "活動履歴"
+    customers: "送信先マスタ",
+    send: "個別送信",
+    history: "送信履歴",
+    replies: "返信検知",
+    settings: "設定"
   };
-  document.getElementById("view-title").textContent = titles[state.view] || "SES Match Pilot";
+  document.getElementById("viewTitle").textContent = titles[state.view] || "SES Auto Propose";
 }
 
 function render() {
   updateTitle();
-  const content = document.getElementById("content");
   const views = {
-    dashboard: renderDashboard,
-    todos: renderTodos,
-    projects: renderProjects,
-    talents: renderTalents,
+    overview: renderOverview,
+    inbox: renderInbox,
+    sheets: renderSheets,
     matches: renderMatches,
-    proposals: renderProposals,
-    interviews: renderInterviews,
-    activity: renderActivity
+    customers: renderCustomers,
+    send: renderSend,
+    history: renderHistory,
+    replies: renderReplies,
+    settings: renderSettings
   };
-  content.innerHTML = views[state.view]();
+  document.getElementById("content").innerHTML = views[state.view]();
 }
 
 document.querySelectorAll(".nav-item").forEach((button) => {
   button.addEventListener("click", () => setView(button.dataset.view));
 });
 
-document.getElementById("globalSearch").addEventListener("input", (event) => {
+document.getElementById("searchInput").addEventListener("input", (event) => {
   state.query = event.target.value;
   render();
 });
 
 document.getElementById("resetBtn").addEventListener("click", () => {
-  state.view = "dashboard";
-  state.selected = null;
+  state.view = "overview";
   state.query = "";
-  state.todosDone.clear();
-  document.getElementById("globalSearch").value = "";
-  setView("dashboard");
+  state.selectedRequestId = "req_001";
+  state.selectedTalentId = "talent_001";
+  document.getElementById("searchInput").value = "";
+  setView("overview");
 });
 
 render();
