@@ -27,9 +27,24 @@ const state = {
 株式会社アルファ,田中,tanaka@alpha.example.invalid,送信可,,
 ベータソリューションズ株式会社,採用担当,ses@beta.example.invalid,送信可,常駐のみ,単価70万円超NG
 株式会社ガンマ,佐藤,sato@gamma.example.invalid,停止,,`,
-    result: null
+    result: null,
+    errors: []
   }
 };
+
+const publicViews = new Set([
+  "overview",
+  "inbox",
+  "matches",
+  "sheets",
+  "customers",
+  "send",
+  "history",
+  "replies",
+  "test",
+  "companyTest",
+  "settings"
+]);
 
 const requestTtlDays = 7;
 const talentTtlDays = 7;
@@ -330,6 +345,19 @@ function parseCompanyTestCustomers(csvText) {
   });
 }
 
+function validateCompanyTestInput() {
+  const errors = [];
+  if (extractKnownSkills(state.companyTest.requestText).length === 0) errors.push("案件情報にスキルがありません");
+  if (extractKnownSkills(state.companyTest.talentText).length === 0) errors.push("人材情報にスキルがありません");
+  const customers = parseCompanyTestCustomers(state.companyTest.customerCsv);
+  if (!customers.length) errors.push("送信先CSVがありません");
+  customers.forEach((customer, index) => {
+    if (!customer.company) errors.push(`送信先${index + 1}: 会社名がありません`);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) errors.push(`送信先${index + 1}: メール形式が不正です`);
+  });
+  return errors;
+}
+
 function matchesQuery(record) {
   if (!state.query) return true;
   return normalize(JSON.stringify(record)).includes(normalize(state.query));
@@ -487,7 +515,11 @@ function table(headers, rows) {
 }
 
 function setView(view) {
+  if (!publicViews.has(view)) return;
   state.view = view;
+  if (typeof window !== "undefined" && window.location.hash !== `#${view}`) {
+    window.history.replaceState(null, "", `#${view}`);
+  }
   document.querySelectorAll(".nav-item").forEach((button) => {
     button.classList.toggle("is-active", button.dataset.view === view);
   });
@@ -540,6 +572,13 @@ function runTestSendOne() {
 }
 
 function runCompanyTestMatching() {
+  const errors = validateCompanyTestInput();
+  state.companyTest.errors = errors;
+  if (errors.length) {
+    state.companyTest.result = null;
+    render();
+    return;
+  }
   const request = parseCompanyTestRequest(state.companyTest.requestText);
   const talent = parseCompanyTestTalent(state.companyTest.talentText);
   const testCustomers = parseCompanyTestCustomers(state.companyTest.customerCsv);
@@ -561,6 +600,24 @@ function sendTargetsForCompanyTest(request, talent, targetCustomers) {
       canSend: blocked.length === 0
     };
   });
+}
+
+function companyTestReport(result) {
+  if (!result) return "";
+  const sendableTargets = result.targets.filter((target) => target.canSend);
+  const blockedTargets = result.targets.filter((target) => !target.canSend);
+  return [
+    "SES Auto Send テスト結果",
+    `マッチング点数: ${result.match.score}点 / ${result.match.rank}`,
+    `送信可能: ${sendableTargets.length}件`,
+    `除外: ${blockedTargets.length}件`,
+    "",
+    "送信可能企業:",
+    ...sendableTargets.map((target) => `- ${target.company} / ${target.email}`),
+    "",
+    "除外企業:",
+    ...blockedTargets.map((target) => `- ${target.company}: ${target.blocked.join(" / ") || "除外"}`)
+  ].join("\n");
 }
 
 function renderOverview() {
@@ -958,6 +1015,7 @@ function renderTestConsole() {
 
 function renderCompanyTest() {
   const result = state.companyTest.result;
+  const errors = state.companyTest.errors;
   const sendableTargets = result ? result.targets.filter((target) => target.canSend) : [];
   const blockedTargets = result ? result.targets.filter((target) => !target.canSend) : [];
   const firstTarget = sendableTargets[0] || result?.targets[0];
@@ -967,6 +1025,9 @@ function renderCompanyTest() {
       <div class="toolbar">
         <h2>企業テスト用マッチング</h2>
         <span class="muted">貼り付け入力で判定します。外部送信・API接続・Gmail接続はしません。</span>
+      </div>
+      <div class="notice">
+        企業テストは、案件情報・人材情報・送信先CSVを貼って「マッチング実行」を押すだけです。実メール送信は発生しません。
       </div>
       <div class="tester-layout">
         <label class="field">
@@ -986,6 +1047,12 @@ function renderCompanyTest() {
         <button class="primary-action" onclick="runCompanyTestMatching()">マッチング実行</button>
         <span class="muted">案件、人材、送信先を変えて何度でも試せます。</span>
       </div>
+      ${errors.length ? `
+        <div class="notice is-error">
+          <strong>入力を確認してください</strong>
+          <ul>${errors.map((error) => `<li>${error}</li>`).join("")}</ul>
+        </div>
+      ` : ""}
     </section>
 
     ${result ? `
@@ -1013,6 +1080,8 @@ function renderCompanyTest() {
         <section class="detail-panel">
           <h2>提案メールプレビュー</h2>
           ${firstTarget ? `<div class="mail-preview">${templateFor(firstTarget, result.request, result.talent)}</div>` : `<p class="muted">送信先がありません。</p>`}
+          <h2>テスト結果レポート</h2>
+          <textarea class="tester-textarea is-report" readonly>${companyTestReport(result)}</textarea>
         </section>
       </div>
     ` : `
@@ -1121,6 +1190,9 @@ function render() {
 }
 
 if (typeof document !== "undefined") {
+  const hashView = window.location.hash.replace("#", "");
+  if (publicViews.has(hashView)) state.view = hashView;
+
   document.querySelectorAll(".nav-item").forEach((button) => {
     button.addEventListener("click", () => setView(button.dataset.view));
   });
@@ -1157,6 +1229,8 @@ if (typeof module !== "undefined") {
     parseCompanyTestRequest,
     parseCompanyTestTalent,
     parseCompanyTestCustomers,
+    validateCompanyTestInput,
+    companyTestReport,
     runCompanyTestMatching
   };
 }

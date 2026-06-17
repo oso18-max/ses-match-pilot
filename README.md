@@ -37,6 +37,12 @@ node prototype\local-static-server.cjs
 http://127.0.0.1:4173/prototype/index.html
 ```
 
+企業テスト直リンク:
+
+```text
+http://127.0.0.1:4173/prototype/index.html#companyTest
+```
+
 画面で見る順番:
 - `テスト`
 - `企業テスト`

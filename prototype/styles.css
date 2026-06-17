@@ -215,6 +215,17 @@ textarea {
   line-height: 1.55;
 }
 
+.notice.is-error {
+  border-color: #fecaca;
+  background: #fff7f7;
+  color: var(--danger);
+}
+
+.notice ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
 .content { display: grid; gap: 18px; }
 
 .panel,
@@ -405,6 +416,12 @@ textarea {
 
 .tester-textarea.is-short {
   min-height: 130px;
+}
+
+.tester-textarea.is-report {
+  min-height: 170px;
+  margin-top: 4px;
+  background: #f8fafc;
 }
 
 .toolbar {
