@@ -1,0 +1,53 @@
+[
+  {
+    "id": "edge_001",
+    "subject": "Java要員のご紹介",
+    "body": "Java/Spring Boot経験5年、即日稼働可能、希望単価68万円です。詳細はスキルシートをご確認ください。",
+    "attachments": [
+      {
+        "filename": "java_engineer_profile.xlsx",
+        "text": "Java Spring Boot PostgreSQL AWS 東京 週3リモート可"
+      }
+    ]
+  },
+  {
+    "id": "edge_002",
+    "subject": "案件情報",
+    "body": "詳細は添付です。",
+    "attachments": [
+      {
+        "filename": "react_project.docx",
+        "text": "React TypeScript Next.js フルリモート 来月開始 単価75万円 必須 React TypeScript 尚可 AWS"
+      }
+    ]
+  },
+  {
+    "id": "edge_003",
+    "subject": "ご相談",
+    "body": "単価や場所など、いくつか相談したいです。",
+    "attachments": []
+  },
+  {
+    "id": "edge_004",
+    "subject": "Re: Javaバックエンド人材のご提案",
+    "body": "ありがとうございます。面談候補日をいただけますでしょうか。",
+    "attachments": []
+  },
+  {
+    "id": "edge_005",
+    "subject": "Python案件とPython要員について",
+    "body": "Python/SQL案件があります。あわせてPython要員もいます。案件は福岡常駐、単価62万円。要員はPython SQL PostgreSQL、希望単価66万円、翌々月稼働です。",
+    "attachments": []
+  },
+  {
+    "id": "edge_006",
+    "subject": "資料送付",
+    "body": "スキャンPDFのため本文抽出できませんでした。",
+    "attachments": [
+      {
+        "filename": "scan_skill_sheet.pdf",
+        "text": ""
+      }
+    ]
+  }
+]

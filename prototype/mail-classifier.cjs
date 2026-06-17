@@ -82,6 +82,7 @@ function classifyMail(mail) {
   if (requestHits.length >= 3 && talentHits.length >= 3) type = "複合";
   else if (requestHits.length >= 3) type = "案件";
   else if (talentHits.length >= 3) type = "人材";
+  else if (/^Re:/i.test(parts.subject) && otherHits.length > 0) type = "その他";
   else if (location === "情報なし" && otherHits.length > 0) type = "その他";
 
   const reasons = [];
