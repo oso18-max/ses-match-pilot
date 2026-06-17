@@ -417,11 +417,23 @@ function showUnsentQueue() {
   document.getElementById("unsentQueue")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+function openUnsentQueue() {
+  state.showUnsentQueue = true;
+  setView("overview");
+}
+
 function markProposalSent(id) {
   if (!state.sentProposalIds.includes(id)) state.sentProposalIds.push(id);
   state.showUnsentQueue = true;
   render();
   document.getElementById("unsentQueue")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function runTestSendOne() {
+  const proposal = unsentProposals()[0];
+  if (!proposal) return;
+  if (!state.sentProposalIds.includes(proposal.id)) state.sentProposalIds.push(proposal.id);
+  render();
 }
 
 function renderOverview() {
@@ -749,6 +761,74 @@ function renderReplies() {
   `;
 }
 
+function renderTestConsole() {
+  const batches = matchBatches();
+  const proposals = unsentProposals(batches);
+  const totalMatches = batches.reduce((sum, batch) => sum + batch.sendable.length, 0);
+  const stoppedCustomers = customers.filter((customer) => !customer.sendable).length;
+  const sentCount = histories.length + state.sentProposalIds.length;
+  const nextProposal = proposals[0];
+
+  return `
+    <section class="panel">
+      <div class="toolbar">
+        <h2>テストコンソール</h2>
+        <span class="muted">サンプルデータのみ / 外部送信なし / Gmail接続なし</span>
+      </div>
+      <div class="test-steps">
+        <button class="test-step" type="button" onclick="setView('inbox')">
+          <span>1</span><strong>受信確認</strong><small>${incomingRequests.length}件の案件メール</small>
+        </button>
+        <button class="test-step" type="button" onclick="setView('matches')">
+          <span>2</span><strong>マッチング確認</strong><small>${totalMatches}件が送信候補</small>
+        </button>
+        <button class="test-step is-danger" type="button" onclick="openUnsentQueue()">
+          <span>3</span><strong>未送信確認</strong><small>${proposals.length}件を送信前チェック</small>
+        </button>
+        <button class="test-step is-success" type="button" onclick="runTestSendOne()">
+          <span>4</span><strong>疑似送信</strong><small>${sentCount}件が履歴対象</small>
+        </button>
+        <button class="test-step" type="button" onclick="setView('replies')">
+          <span>5</span><strong>返信検知</strong><small>${replies.length}件の返信候補</small>
+        </button>
+      </div>
+    </section>
+
+    <div class="grid-2">
+      <section class="panel">
+        <h2>今回のテスト結果</h2>
+        ${table(
+          ["確認項目", "結果", "見る場所"],
+          [
+            `<tr><td>案件メール</td><td>${incomingRequests.length}件</td><td>案件メール</td></tr>`,
+            `<tr><td>登録スキルシート</td><td>${skillSheets.length}件</td><td>登録スキルシート</td></tr>`,
+            `<tr><td>送信先</td><td>${customers.length}件 / 停止${stoppedCustomers}件</td><td>送信先マスタ</td></tr>`,
+            `<tr><td>マッチング候補</td><td>${totalMatches}件</td><td>マッチング</td></tr>`,
+            `<tr><td>未送信</td><td>${proposals.length}件</td><td>マッチング管理</td></tr>`,
+            `<tr><td>送信履歴</td><td>${sentCount}件</td><td>送信履歴</td></tr>`
+          ]
+        )}
+      </section>
+      <section class="detail-panel">
+        <h2>次に見る候補</h2>
+        ${nextProposal ? `
+          <div class="card-list">
+            <div class="action-card">
+              <div>${pill(`${nextProposal.match.score}点`)}</div>
+              <div>
+                <strong>${nextProposal.customer.company}</strong>
+                <div class="meta">${nextProposal.talent.code} / ${nextProposal.request.subject}</div>
+                ${matchBreakdown(nextProposal.match)}
+              </div>
+              <button class="small-action is-primary" onclick="runTestSendOne()">疑似送信</button>
+            </div>
+          </div>
+        ` : `<p class="muted">未送信候補はありません。</p>`}
+      </section>
+    </div>
+  `;
+}
+
 function renderSettings() {
   return `
     <div class="grid-2">
@@ -820,6 +900,7 @@ function updateTitle() {
     send: "個別送信",
     history: "送信履歴",
     replies: "返信検知",
+    test: "テスト",
     settings: "設定"
   };
   document.getElementById("viewTitle").textContent = titles[state.view] || "SES Auto Send";
@@ -836,6 +917,7 @@ function render() {
     send: renderSend,
     history: renderHistory,
     replies: renderReplies,
+    test: renderTestConsole,
     settings: renderSettings
   };
   document.getElementById("content").innerHTML = views[state.view]();
@@ -866,11 +948,14 @@ if (typeof module !== "undefined") {
     incomingRequests,
     customers,
     histories,
+    replies,
     score,
     rankedMatches,
     matchBatches,
     sendTargets,
     unsentProposals,
-    proposalId
+    proposalId,
+    renderTestConsole,
+    runTestSendOne
   };
 }
