@@ -4,9 +4,12 @@ const path = require("node:path");
 const app = require("./app.js");
 
 const htmlSource = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
+const standaloneSource = fs.readFileSync(path.join(__dirname, "company-test.html"), "utf8");
 const appSource = fs.readFileSync(path.join(__dirname, "app.js"), "utf8");
 
 assert.match(htmlSource, /data-view="companyTest"/);
+assert.match(standaloneSource, /data-default-view="companyTest"/);
+assert.match(standaloneSource, /id="content"/);
 assert.match(appSource, /function renderCompanyTest/);
 assert.match(appSource, /function saveCompanyTestDraft/);
 assert.match(appSource, /function resetCompanyTestSample/);

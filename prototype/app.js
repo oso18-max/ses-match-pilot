@@ -1349,7 +1349,10 @@ function updateTitle() {
     companyTest: "企業テスト",
     settings: "設定"
   };
-  document.getElementById("viewTitle").textContent = titles[state.view] || "SES Auto Send";
+  const title = titles[state.view] || "SES Auto Send";
+  const titleNode = document.getElementById("viewTitle");
+  if (titleNode) titleNode.textContent = title;
+  document.title = state.view === "companyTest" ? "SES Auto Send 企業テスト" : "SES Auto Send";
 }
 
 function render() {
@@ -1367,27 +1370,36 @@ function render() {
     companyTest: renderCompanyTest,
     settings: renderSettings
   };
-  document.getElementById("content").innerHTML = views[state.view]();
+  const content = document.getElementById("content");
+  if (content) content.innerHTML = views[state.view]();
 }
 
 if (typeof document !== "undefined") {
   loadCompanyTestDraft();
+  const defaultView = document.body?.dataset.defaultView;
   const hashView = window.location.hash.replace("#", "");
   if (publicViews.has(hashView)) state.view = hashView;
+  else if (publicViews.has(defaultView)) state.view = defaultView;
 
   document.querySelectorAll(".nav-item").forEach((button) => {
     button.addEventListener("click", () => setView(button.dataset.view));
   });
 
-  document.getElementById("searchInput").addEventListener("input", (event) => {
-    state.query = event.target.value;
-    render();
-  });
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) {
+    searchInput.addEventListener("input", (event) => {
+      state.query = event.target.value;
+      render();
+    });
+  }
 
-  document.getElementById("settingsBtn").addEventListener("click", () => {
-    state.showMatchSettings = true;
-    setView("settings");
-  });
+  const settingsBtn = document.getElementById("settingsBtn");
+  if (settingsBtn) {
+    settingsBtn.addEventListener("click", () => {
+      state.showMatchSettings = true;
+      setView("settings");
+    });
+  }
 
   render();
 }

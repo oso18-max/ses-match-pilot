@@ -114,6 +114,28 @@ button { cursor: pointer; }
   padding: 30px;
 }
 
+.public-test-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px;
+}
+
+.public-test-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.public-test-header h1 {
+  margin-bottom: 0;
+}
+
+.public-test-header .muted {
+  margin-bottom: 2px;
+  font-weight: 800;
+}
+
 .topbar {
   display: flex;
   justify-content: space-between;

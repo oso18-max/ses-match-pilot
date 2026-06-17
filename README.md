@@ -43,6 +43,12 @@ http://127.0.0.1:4173/prototype/index.html
 http://127.0.0.1:4173/prototype/index.html#companyTest
 ```
 
+企業テスト専用ページ:
+
+```text
+http://127.0.0.1:4173/prototype/company-test.html
+```
+
 画面で見る順番:
 - `テスト`
 - `企業テスト`
