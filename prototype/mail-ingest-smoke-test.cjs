@@ -40,7 +40,7 @@ const csvScenario = buildScenario(inbox, { customers: importedCustomers.customer
 assert.equal(csvScenario.customers.length, 3);
 const csvRows = collectSendableRows(csvScenario.requests, csvScenario.talents, csvScenario.customers, csvScenario.settings);
 const csvSendableRows = csvRows.filter((row) => row.sendStatus === "未送信候補");
-assert.equal(csvSendableRows.length, 3);
+assert.equal(csvSendableRows.length, 2);
 assert.equal(csvSendableRows.some((row) => row.company === "株式会社ガンマ"), false);
 
 console.log("OK: mail ingest smoke test passed");

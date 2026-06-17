@@ -23,7 +23,8 @@ assert.equal(result.replyCandidates.length, 6);
 assert.equal(result.replyResults[0].candidates[0].status, "返信候補");
 assert.equal(result.replyResults[2].candidates.length, 0);
 assert.equal(csvResult.scenario.customers.length, 3);
-assert.equal(csvResult.drafts.length, 3);
+assert.equal(csvResult.sendableRows.length, 2);
+assert.equal(csvResult.drafts.length, 2);
 assert.equal(csvResult.history[0].customerId, "customer_csv_001");
 assert.equal(csvResult.history.some((item) => item.company === "株式会社ガンマ"), false);
 

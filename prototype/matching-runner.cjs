@@ -39,6 +39,7 @@ function collectSendableRows(requests, talents, customers, settings) {
   const threshold = settings.sendThreshold || 80;
   const maxSendPerTalent = settings.maxSendPerTalent || 3;
   const countsByTalent = {};
+  const queuedTalentTargets = {};
 
   requests.forEach((request) => {
     rankMatches(request, talents).forEach(({ talent, match }) => {
@@ -47,7 +48,15 @@ function collectSendableRows(requests, talents, customers, settings) {
 
       targets.forEach((target) => {
         const canQueue = matchOk && target.canSend;
-        if (canQueue) countsByTalent[talent.id] = (countsByTalent[talent.id] || 0) + 1;
+        const duplicateKey = `${talent.id}|${target.email || target.company}`;
+        const isDuplicateTarget = Boolean(queuedTalentTargets[duplicateKey]);
+        const currentTalentCount = countsByTalent[talent.id] || 0;
+        const withinTalentLimit = currentTalentCount < maxSendPerTalent;
+        const sendStatus = canQueue && !isDuplicateTarget && withinTalentLimit ? "未送信候補" : "除外";
+        if (sendStatus === "未送信候補") {
+          countsByTalent[talent.id] = currentTalentCount + 1;
+          queuedTalentTargets[duplicateKey] = true;
+        }
         rows.push({
           request: request.id,
           subject: request.subject,
@@ -55,10 +64,16 @@ function collectSendableRows(requests, talents, customers, settings) {
           company: target.company,
           score: match.score,
           rank: match.rank,
-          sendStatus: canQueue && countsByTalent[talent.id] <= maxSendPerTalent ? "未送信候補" : "除外",
-          reason: canQueue
+          sendStatus,
+          reason: sendStatus === "未送信候補"
             ? match.reasons.join(" / ")
-            : [...match.reasons, match.warning, ...target.blocked].filter(Boolean).join(" / ")
+            : [
+              ...match.reasons,
+              match.warning,
+              ...target.blocked,
+              canQueue && isDuplicateTarget ? "同一人材・同一送信先の重複" : "",
+              canQueue && !withinTalentLimit ? "同一人材の送信上限" : ""
+            ].filter(Boolean).join(" / ")
         });
       });
     });

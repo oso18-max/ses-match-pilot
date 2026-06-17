@@ -21,7 +21,7 @@ assert.match(drafts[0].body, /田中様/);
 assert.match(drafts[0].body, /候補者/);
 assert.match(drafts[0].body, /確認事項/);
 assert.match(drafts[0].body, /マッチングスコア: 100点/);
-assert.equal(csvDrafts.length, 3);
+assert.equal(csvDrafts.length, 2);
 assert.equal(csvDrafts[0].customerId, "customer_csv_001");
 assert.equal(csvDrafts[0].templateGroup, "標準");
 assert.equal(csvDrafts.some((draft) => draft.company === "株式会社ガンマ"), false);

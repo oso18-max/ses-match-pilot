@@ -18,7 +18,7 @@ assert.equal(history[0].to, "tanaka@alpha.example.invalid");
 assert.equal(history[0].talent, "ingested_engineer_002");
 assert.equal(history[0].score, 100);
 assert.ok(history[0].request.includes("Java"));
-assert.equal(csvHistory.length, 3);
+assert.equal(csvHistory.length, 2);
 assert.equal(csvHistory[0].customerId, "customer_csv_001");
 assert.equal(csvHistory[0].templateGroup, "標準");
 assert.equal(csvHistory.some((item) => item.company === "株式会社ガンマ"), false);
