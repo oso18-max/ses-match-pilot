@@ -103,6 +103,16 @@ function toCsv(rows) {
   ].join("\n");
 }
 
+function aggregateConfirmationRows(rows) {
+  const grouped = rows.reduce((acc, row) => {
+    const key = `${row.file}|${row.id}|${row.category}|${row.kind}|${row.status}|${row.reason}`;
+    if (!acc[key]) acc[key] = { ...row, count: 0 };
+    acc[key].count += 1;
+    return acc;
+  }, {});
+  return Object.values(grouped);
+}
+
 function run() {
   if (csvMode) {
     const rows = files.flatMap(confirmationCsvRows);
@@ -132,6 +142,9 @@ function run() {
       reason
     }))
   )));
+
+  console.log("確認対象 集約");
+  console.table(aggregateConfirmationRows(files.flatMap(confirmationCsvRows)));
 }
 
 if (require.main === module) run();
@@ -139,5 +152,6 @@ if (require.main === module) run();
 module.exports = {
   confirmationItems,
   confirmationCsvRows,
+  aggregateConfirmationRows,
   summarize
 };

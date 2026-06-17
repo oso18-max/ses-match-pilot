@@ -1,6 +1,6 @@
 const assert = require("node:assert/strict");
 const path = require("node:path");
-const { confirmationCsvRows, summarize } = require("./pipeline-quality-report.cjs");
+const { aggregateConfirmationRows, confirmationCsvRows, summarize } = require("./pipeline-quality-report.cjs");
 
 const normal = summarize(path.join(__dirname, "sample-mail-inbox.json"));
 const edge = summarize(path.join(__dirname, "sample-mail-edge-cases.json"));
@@ -24,6 +24,11 @@ assert.equal(normalRows.length, 7);
 assert.deepEqual(Object.keys(normalRows[0]), ["file", "id", "category", "kind", "status", "reason"]);
 assert.equal(normalRows.some((row) => row.category === "判定不能"), true);
 assert.equal(normalRows.some((row) => row.category === "抽出不足"), true);
+
+const aggregatedRows = aggregateConfirmationRows(normalRows);
+const locationRow = aggregatedRows.find((row) => row.id === "ingested_engineer_002" && row.reason === "人材:勤務地");
+assert.equal(locationRow.count, 3);
+assert.equal(aggregatedRows.length < normalRows.length, true);
 
 console.log("OK: pipeline quality report smoke test passed");
 console.table([
