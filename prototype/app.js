@@ -8,7 +8,27 @@ const state = {
   maxSendPerTalent: 3,
   showMatchSettings: false,
   showUnsentQueue: true,
-  sentProposalIds: []
+  sentProposalIds: [],
+  companyTest: {
+    requestText: `Java/Spring Boot案件
+必須: Java, Spring Boot, PostgreSQL
+尚可: AWS
+単価: 70万
+勤務地: 東京
+稼働: 即日
+働き方: 週3リモート`,
+    talentText: `Javaバックエンドエンジニア
+スキル: Java, Spring Boot, PostgreSQL, AWS
+希望単価: 68万
+勤務地: 東京
+稼働: 即日
+働き方: 週3リモート可`,
+    customerCsv: `company,person,email,sendable,ngSkills,ngConditions
+株式会社アルファ,田中,tanaka@alpha.example.invalid,送信可,,
+ベータソリューションズ株式会社,採用担当,ses@beta.example.invalid,送信可,常駐のみ,単価70万円超NG
+株式会社ガンマ,佐藤,sato@gamma.example.invalid,停止,,`,
+    result: null
+  }
 };
 
 const requestTtlDays = 7;
@@ -227,6 +247,89 @@ function normalize(value) {
   return String(value || "").toLowerCase();
 }
 
+function extractKnownSkills(text) {
+  const skills = [
+    "Java", "Spring Boot", "PostgreSQL", "AWS", "React", "TypeScript",
+    "Next.js", "Python", "SQL", "ETL", "PHP", "Laravel", "Vue", "Node.js"
+  ];
+  return skills.filter((skill) => text.toLowerCase().includes(skill.toLowerCase()));
+}
+
+function extractUnit(text, fallback) {
+  const matched = String(text).match(/(\d{2,3})\s*万/);
+  return matched ? Number(matched[1]) : fallback;
+}
+
+function extractLocation(text) {
+  const locations = ["東京", "大阪", "福岡", "名古屋", "札幌", "仙台", "横浜", "リモート"];
+  return locations.find((location) => text.includes(location)) || "不明";
+}
+
+function extractWorkStyle(text) {
+  if (text.includes("フルリモート")) return "フルリモート";
+  if (text.includes("リモート")) return "リモート可";
+  if (text.includes("常駐")) return "常駐";
+  return "不明";
+}
+
+function extractStart(text) {
+  if (text.includes("即日")) return "即日";
+  if (text.includes("来月")) return "来月";
+  if (text.includes("翌月")) return "来月";
+  return "不明";
+}
+
+function parseCompanyTestRequest(text) {
+  const skills = extractKnownSkills(text);
+  return {
+    id: "company_test_req",
+    subject: String(text).split(/\r?\n/).find(Boolean) || "テスト案件",
+    extracted: {
+      role: String(text).split(/\r?\n/).find(Boolean) || "テスト案件",
+      required: skills.length ? skills.slice(0, Math.min(skills.length, 3)) : ["Java"],
+      nice: skills.slice(3),
+      unitMax: extractUnit(text, 70),
+      start: extractStart(text),
+      location: extractLocation(text),
+      workStyle: extractWorkStyle(text)
+    }
+  };
+}
+
+function parseCompanyTestTalent(text) {
+  const skills = extractKnownSkills(text);
+  return {
+    id: "company_test_talent",
+    code: "test_engineer_001",
+    role: String(text).split(/\r?\n/).find(Boolean) || "テスト人材",
+    skills: skills.length ? skills : ["Java"],
+    unit: extractUnit(text, 70),
+    available: extractStart(text),
+    location: extractLocation(text),
+    workStyle: extractWorkStyle(text)
+  };
+}
+
+function parseCompanyTestCustomers(csvText) {
+  const rows = String(csvText).trim().split(/\r?\n/).filter(Boolean);
+  const headers = rows.shift()?.split(",").map((item) => item.trim()) || [];
+  return rows.map((line, index) => {
+    const values = line.split(",").map((item) => item.trim());
+    const row = Object.fromEntries(headers.map((header, headerIndex) => [header, values[headerIndex] || ""]));
+    return {
+      id: `company_test_customer_${index + 1}`,
+      company: row.company || `テスト企業${index + 1}`,
+      person: row.person || "担当者",
+      honorific: "様",
+      email: row.email || `test${index + 1}@example.invalid`,
+      sendable: !["false", "停止", "不可", "ng"].includes(String(row.sendable || "").toLowerCase()),
+      ngSkills: String(row.ngSkills || "").split(/[|;]/).map((item) => item.trim()).filter(Boolean),
+      ngConditions: String(row.ngConditions || "").split(/[|;]/).map((item) => item.trim()).filter(Boolean),
+      templateGroup: "標準"
+    };
+  });
+}
+
 function matchesQuery(record) {
   if (!state.query) return true;
   return normalize(JSON.stringify(record)).includes(normalize(state.query));
@@ -434,6 +537,30 @@ function runTestSendOne() {
   if (!proposal) return;
   if (!state.sentProposalIds.includes(proposal.id)) state.sentProposalIds.push(proposal.id);
   render();
+}
+
+function runCompanyTestMatching() {
+  const request = parseCompanyTestRequest(state.companyTest.requestText);
+  const talent = parseCompanyTestTalent(state.companyTest.talentText);
+  const testCustomers = parseCompanyTestCustomers(state.companyTest.customerCsv);
+  const match = score(request, talent);
+  const targets = sendTargetsForCompanyTest(request, talent, testCustomers);
+  state.companyTest.result = { request, talent, match, targets };
+  render();
+}
+
+function sendTargetsForCompanyTest(request, talent, targetCustomers) {
+  return targetCustomers.map((customer) => {
+    const blocked = [];
+    if (!customer.sendable) blocked.push("送信停止");
+    if (customer.ngSkills.some((ng) => talent.skills.includes(ng) || request.extracted.workStyle.includes(ng))) blocked.push("NG条件");
+    if (customer.ngConditions.includes("単価70万円超NG") && talent.unit > 70) blocked.push("単価NG");
+    return {
+      ...customer,
+      blocked,
+      canSend: blocked.length === 0
+    };
+  });
 }
 
 function renderOverview() {
@@ -829,6 +956,74 @@ function renderTestConsole() {
   `;
 }
 
+function renderCompanyTest() {
+  const result = state.companyTest.result;
+  const sendableTargets = result ? result.targets.filter((target) => target.canSend) : [];
+  const blockedTargets = result ? result.targets.filter((target) => !target.canSend) : [];
+  const firstTarget = sendableTargets[0] || result?.targets[0];
+
+  return `
+    <section class="panel">
+      <div class="toolbar">
+        <h2>企業テスト用マッチング</h2>
+        <span class="muted">貼り付け入力で判定します。外部送信・API接続・Gmail接続はしません。</span>
+      </div>
+      <div class="tester-layout">
+        <label class="field">
+          <span>案件情報</span>
+          <textarea class="tester-textarea" oninput="state.companyTest.requestText = this.value">${state.companyTest.requestText}</textarea>
+        </label>
+        <label class="field">
+          <span>人材情報</span>
+          <textarea class="tester-textarea" oninput="state.companyTest.talentText = this.value">${state.companyTest.talentText}</textarea>
+        </label>
+        <label class="field wide">
+          <span>送信先CSV</span>
+          <textarea class="tester-textarea is-short" oninput="state.companyTest.customerCsv = this.value">${state.companyTest.customerCsv}</textarea>
+        </label>
+      </div>
+      <div class="toolbar">
+        <button class="primary-action" onclick="runCompanyTestMatching()">マッチング実行</button>
+        <span class="muted">案件、人材、送信先を変えて何度でも試せます。</span>
+      </div>
+    </section>
+
+    ${result ? `
+      <div class="metrics">
+        <div class="metric is-accent"><span>マッチング点数</span><strong>${result.match.score}</strong><small>${result.match.rank}</small></div>
+        <div class="metric is-success"><span>送信可能</span><strong>${sendableTargets.length}</strong><small>個別送信候補</small></div>
+        <div class="metric is-danger"><span>除外</span><strong>${blockedTargets.length}</strong><small>NG/停止</small></div>
+        <div class="metric"><span>送信処理</span><strong>0</strong><small>実送信なし</small></div>
+      </div>
+      <div class="grid-2">
+        <section class="panel">
+          <h2>送信先判定</h2>
+          ${table(
+            ["企業", "宛先", "判定", "理由"],
+            result.targets.map((target) => `
+              <tr>
+                <td><strong>${target.company}</strong><br>${target.person}${target.honorific}</td>
+                <td>${target.email}</td>
+                <td><span class="status ${target.canSend ? "ok" : "bad"}">${target.canSend ? "送信可能" : "除外"}</span></td>
+                <td>${target.blocked.length ? pills(target.blocked, "danger") : pill("OK")}</td>
+              </tr>
+            `)
+          )}
+        </section>
+        <section class="detail-panel">
+          <h2>提案メールプレビュー</h2>
+          ${firstTarget ? `<div class="mail-preview">${templateFor(firstTarget, result.request, result.talent)}</div>` : `<p class="muted">送信先がありません。</p>`}
+        </section>
+      </div>
+    ` : `
+      <section class="panel">
+        <h2>まだ未実行です</h2>
+        <p class="muted">案件、人材、送信先CSVを入れて「マッチング実行」を押してください。</p>
+      </section>
+    `}
+  `;
+}
+
 function renderSettings() {
   return `
     <div class="grid-2">
@@ -901,6 +1096,7 @@ function updateTitle() {
     history: "送信履歴",
     replies: "返信検知",
     test: "テスト",
+    companyTest: "企業テスト",
     settings: "設定"
   };
   document.getElementById("viewTitle").textContent = titles[state.view] || "SES Auto Send";
@@ -918,6 +1114,7 @@ function render() {
     history: renderHistory,
     replies: renderReplies,
     test: renderTestConsole,
+    companyTest: renderCompanyTest,
     settings: renderSettings
   };
   document.getElementById("content").innerHTML = views[state.view]();
@@ -956,6 +1153,10 @@ if (typeof module !== "undefined") {
     unsentProposals,
     proposalId,
     renderTestConsole,
-    runTestSendOne
+    runTestSendOne,
+    parseCompanyTestRequest,
+    parseCompanyTestTalent,
+    parseCompanyTestCustomers,
+    runCompanyTestMatching
   };
 }
