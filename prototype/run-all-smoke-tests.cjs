@@ -11,6 +11,7 @@ const tests = [
   "proposal-preview-smoke-test.cjs",
   "reply-detection-smoke-test.cjs",
   "send-history-smoke-test.cjs",
+  "send-queue-smoke-test.cjs",
   "ui-copy-smoke-test.cjs"
 ];
 
