@@ -3,6 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { buildScenario } = require("./mail-ingest-runner.cjs");
 const { collectSendableRows } = require("./matching-runner.cjs");
+const { importCustomersFromCsv } = require("./customer-csv-importer.cjs");
 
 const inbox = JSON.parse(fs.readFileSync(path.join(__dirname, "sample-mail-inbox.json"), "utf8"));
 const scenario = buildScenario(inbox);
@@ -32,6 +33,15 @@ assert.equal(
 
 const pendingTypes = scenario.pending.map((item) => item.type);
 assert.deepEqual(pendingTypes, ["その他", "判定不能"]);
+
+const importedCustomers = importCustomersFromCsv(fs.readFileSync(path.join(__dirname, "sample-customers.csv"), "utf8"));
+assert.equal(importedCustomers.accepted, true);
+const csvScenario = buildScenario(inbox, { customers: importedCustomers.customers });
+assert.equal(csvScenario.customers.length, 3);
+const csvRows = collectSendableRows(csvScenario.requests, csvScenario.talents, csvScenario.customers, csvScenario.settings);
+const csvSendableRows = csvRows.filter((row) => row.sendStatus === "未送信候補");
+assert.equal(csvSendableRows.length, 3);
+assert.equal(csvSendableRows.some((row) => row.company === "株式会社ガンマ"), false);
 
 console.log("OK: mail ingest smoke test passed");
 console.table(sendableRows.map((row) => ({

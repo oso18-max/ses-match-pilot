@@ -2,10 +2,12 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { classifyMail, textParts } = require("./mail-classifier.cjs");
 const { collectSendableRows } = require("./matching-runner.cjs");
+const { importCustomersFromCsv } = require("./customer-csv-importer.cjs");
 
 const inboxPath = process.argv[2]
   ? path.resolve(process.argv[2])
   : path.join(__dirname, "sample-mail-inbox.json");
+const customerCsvPath = process.argv[3] ? path.resolve(process.argv[3]) : null;
 
 const knownSkills = [
   "Java",
@@ -193,11 +195,12 @@ function extractTalent(mail, index) {
   return talent;
 }
 
-function buildScenario(mails) {
+function buildScenario(mails, options = {}) {
   const classifications = mails.map(classifyMail);
   const requests = [];
   const talents = [];
   const pending = [];
+  const customers = options.customers || defaultCustomers;
 
   mails.forEach((mail, index) => {
     const classification = classifications[index];
@@ -242,14 +245,25 @@ function buildScenario(mails) {
     classifications,
     requests,
     talents,
-    customers: defaultCustomers,
+    customers,
     pending
   };
 }
 
 function run() {
   const mails = readInbox(inboxPath);
-  const scenario = buildScenario(mails);
+  let customers = defaultCustomers;
+  if (customerCsvPath) {
+    const imported = importCustomersFromCsv(fs.readFileSync(customerCsvPath, "utf8"));
+    if (!imported.accepted) {
+      console.log(`Customer CSV rejected: ${path.basename(customerCsvPath)}`);
+      console.table(imported.errors);
+      process.exit(1);
+    }
+    customers = imported.customers;
+  }
+
+  const scenario = buildScenario(mails, { customers });
   const rows = collectSendableRows(scenario.requests, scenario.talents, scenario.customers, scenario.settings);
   const sendableRows = rows.filter((row) => row.sendStatus === "未送信候補");
 
