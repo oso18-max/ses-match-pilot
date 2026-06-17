@@ -70,6 +70,7 @@ function summarize(filePath) {
     pending: result.scenario.pending.length,
     sendable: result.sendableRows.length,
     drafts: result.drafts.length,
+    queue: result.queue.length,
     history: result.history.length,
     replies: result.replyResults.length,
     replyCandidates: result.replyCandidates.length,

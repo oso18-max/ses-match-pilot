@@ -17,6 +17,7 @@ assert.equal(result.scenario.talents.length, 2);
 assert.equal(result.scenario.pending.length, 2);
 assert.equal(result.sendableRows.length, 3);
 assert.equal(result.drafts.length, 3);
+assert.equal(result.queue.length, 3);
 assert.equal(result.history.length, 3);
 assert.equal(result.replyResults.length, 3);
 assert.equal(result.replyCandidates.length, 6);
@@ -25,6 +26,7 @@ assert.equal(result.replyResults[2].candidates.length, 0);
 assert.equal(csvResult.scenario.customers.length, 3);
 assert.equal(csvResult.sendableRows.length, 2);
 assert.equal(csvResult.drafts.length, 2);
+assert.equal(csvResult.queue.length, 2);
 assert.equal(csvResult.history[0].customerId, "customer_csv_001");
 assert.equal(csvResult.history.some((item) => item.company === "株式会社ガンマ"), false);
 
@@ -44,6 +46,7 @@ console.table([{
   pending: result.scenario.pending.length,
   sendable: result.sendableRows.length,
   drafts: result.drafts.length,
+  queue: result.queue.length,
   history: result.history.length,
   replies: result.replyResults.length
 }]);
