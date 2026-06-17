@@ -14,6 +14,7 @@ const tests = [
   "send-execution-smoke-test.cjs",
   "send-history-smoke-test.cjs",
   "send-queue-smoke-test.cjs",
+  "shared-ledger-smoke-test.cjs",
   "ui-copy-smoke-test.cjs"
 ];
 
