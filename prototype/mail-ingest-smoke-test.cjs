@@ -23,6 +23,13 @@ const talentMissing = scenario.talents.flatMap((talent) => talent.missingFields)
 assert.equal(requestMissing.includes("必須スキル"), false);
 assert.equal(talentMissing.includes("スキル"), false);
 
+const remoteTalent = scenario.talents.find((talent) => talent.sourceMailId === "mail_002");
+assert.equal(remoteTalent.missingFields.includes("勤務地"), false);
+assert.equal(
+  remoteTalent.extractionReasons.includes("リモート可のため勤務地不足扱いなし"),
+  true
+);
+
 const pendingTypes = scenario.pending.map((item) => item.type);
 assert.deepEqual(pendingTypes, ["その他", "判定不能"]);
 

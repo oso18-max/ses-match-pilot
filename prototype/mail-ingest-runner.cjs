@@ -97,6 +97,16 @@ function extractWorkStyle(text) {
   return "不明";
 }
 
+function isRemoteOnly(workStyle) {
+  return workStyle === "フルリモート" || workStyle === "リモート";
+}
+
+function remoteLocationReason(workStyle, location) {
+  return location === "不明" && isRemoteOnly(workStyle)
+    ? "リモート可のため勤務地不足扱いなし"
+    : null;
+}
+
 function inferRole(skills) {
   if (skills.includes("Java")) return "Javaバックエンド";
   if (skills.includes("React")) return "Reactフロント";
@@ -110,7 +120,7 @@ function requestMissingFields(request) {
   if (!request.extracted.required.length) missing.push("必須スキル");
   if (!request.extracted.unitMax) missing.push("単価");
   if (request.extracted.start === "不明") missing.push("開始時期");
-  if (request.extracted.location === "不明") missing.push("勤務地");
+  if (request.extracted.location === "不明" && !isRemoteOnly(request.extracted.workStyle)) missing.push("勤務地");
   return missing;
 }
 
@@ -120,13 +130,16 @@ function talentMissingFields(talent) {
   if (!talent.skills.length) missing.push("スキル");
   if (talent.unit === 999) missing.push("希望単価");
   if (talent.available === "不明") missing.push("稼働時期");
-  if (talent.location === "不明") missing.push("勤務地");
+  if (talent.location === "不明" && !isRemoteOnly(talent.workStyle)) missing.push("勤務地");
   return missing;
 }
 
 function extractRequest(mail, index) {
   const text = joinedText(mail);
   const skills = extractSkills(text);
+  const location = extractLocation(text);
+  const workStyle = extractWorkStyle(text);
+  const remoteReason = remoteLocationReason(workStyle, location);
   const request = {
     id: `ingested_req_${String(index + 1).padStart(3, "0")}`,
     sourceMailId: mail.id,
@@ -137,15 +150,16 @@ function extractRequest(mail, index) {
       nice: skills.slice(3),
       unitMax: extractUnit(text) || 0,
       start: extractStart(text),
-      location: extractLocation(text),
-      workStyle: extractWorkStyle(text)
+      location,
+      workStyle
     },
     extractionReasons: [
       `skills=${skills.join("/") || "未抽出"}`,
       `unit=${extractUnit(text) || "未抽出"}`,
       `start=${extractStart(text)}`,
-      `location=${extractLocation(text)}`
-    ]
+      `location=${location}`,
+      remoteReason
+    ].filter(Boolean)
   };
   request.missingFields = requestMissingFields(request);
   return request;
@@ -154,6 +168,9 @@ function extractRequest(mail, index) {
 function extractTalent(mail, index) {
   const text = joinedText(mail);
   const skills = extractSkills(text);
+  const location = extractLocation(text);
+  const workStyle = extractWorkStyle(text);
+  const remoteReason = remoteLocationReason(workStyle, location);
   const talent = {
     id: `ingested_talent_${String(index + 1).padStart(3, "0")}`,
     sourceMailId: mail.id,
@@ -162,14 +179,15 @@ function extractTalent(mail, index) {
     skills,
     unit: extractUnit(text) || 999,
     available: extractStart(text),
-    location: extractLocation(text),
-    workStyle: extractWorkStyle(text),
+    location,
+    workStyle,
     extractionReasons: [
       `skills=${skills.join("/") || "未抽出"}`,
       `unit=${extractUnit(text) || "未抽出"}`,
       `available=${extractStart(text)}`,
-      `location=${extractLocation(text)}`
-    ]
+      `location=${location}`,
+      remoteReason
+    ].filter(Boolean)
   };
   talent.missingFields = talentMissingFields(talent);
   return talent;
@@ -277,5 +295,6 @@ module.exports = {
   extractRequest,
   extractTalent,
   requestMissingFields,
-  talentMissingFields
+  talentMissingFields,
+  isRemoteOnly
 };
