@@ -2,7 +2,9 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { runPipeline } = require("./pipeline-runner.cjs");
 
-const scenarioFiles = process.argv.slice(2);
+const rawArgs = process.argv.slice(2);
+const csvMode = rawArgs.includes("--csv");
+const scenarioFiles = rawArgs.filter((arg) => arg !== "--csv");
 const defaultScenarioFiles = [
   "sample-mail-inbox.json",
   "sample-mail-edge-cases.json"
@@ -19,6 +21,7 @@ function readJson(filePath) {
 function confirmationItems(result) {
   return [
     ...result.scenario.pending.map((item) => ({
+      id: item.id,
       kind: "メール確認",
       status: item.type,
       reason: item.reason,
@@ -27,6 +30,7 @@ function confirmationItems(result) {
     ...result.drafts
       .filter((draft) => draft.status === "確認必要")
       .map((draft) => ({
+        id: draft.talent,
         kind: "下書き確認",
         status: draft.status,
         reason: draft.reviewItems.join(" / "),
@@ -35,6 +39,7 @@ function confirmationItems(result) {
     ...result.replyResults
       .filter((item) => !item.candidates.some((candidate) => candidate.status === "返信候補"))
       .map((item) => ({
+        id: item.reply.id,
         kind: "返信確認",
         status: item.candidates[0]?.status || "未照合",
         reason: item.candidates[0]?.reasons || "一致なし",
@@ -73,7 +78,38 @@ function summarize(filePath) {
   };
 }
 
+function csvEscape(value) {
+  const text = String(value ?? "");
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+function confirmationCsvRows(filePath) {
+  const result = runPipeline(readJson(filePath), replies);
+  return confirmationItems(result).map((item) => ({
+    file: path.basename(filePath),
+    id: item.id,
+    category: item.category,
+    kind: item.kind,
+    status: item.status,
+    reason: item.reason
+  }));
+}
+
+function toCsv(rows) {
+  const headers = ["file", "id", "category", "kind", "status", "reason"];
+  return [
+    headers.join(","),
+    ...rows.map((row) => headers.map((header) => csvEscape(row[header])).join(","))
+  ].join("\n");
+}
+
 function run() {
+  if (csvMode) {
+    const rows = files.flatMap(confirmationCsvRows);
+    console.log(toCsv(rows));
+    return;
+  }
+
   const summaries = files.map(summarize);
   console.log("SES Auto Send quality report");
   console.log("mode: local only / no external send");
@@ -102,5 +138,6 @@ if (require.main === module) run();
 
 module.exports = {
   confirmationItems,
+  confirmationCsvRows,
   summarize
 };
