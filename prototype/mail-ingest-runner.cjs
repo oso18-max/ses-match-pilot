@@ -104,10 +104,30 @@ function inferRole(skills) {
   return "未抽出";
 }
 
+function requestMissingFields(request) {
+  const missing = [];
+  if (request.extracted.role === "未抽出") missing.push("職種");
+  if (!request.extracted.required.length) missing.push("必須スキル");
+  if (!request.extracted.unitMax) missing.push("単価");
+  if (request.extracted.start === "不明") missing.push("開始時期");
+  if (request.extracted.location === "不明") missing.push("勤務地");
+  return missing;
+}
+
+function talentMissingFields(talent) {
+  const missing = [];
+  if (talent.role === "未抽出") missing.push("職種");
+  if (!talent.skills.length) missing.push("スキル");
+  if (talent.unit === 999) missing.push("希望単価");
+  if (talent.available === "不明") missing.push("稼働時期");
+  if (talent.location === "不明") missing.push("勤務地");
+  return missing;
+}
+
 function extractRequest(mail, index) {
   const text = joinedText(mail);
   const skills = extractSkills(text);
-  return {
+  const request = {
     id: `ingested_req_${String(index + 1).padStart(3, "0")}`,
     sourceMailId: mail.id,
     subject: mail.subject,
@@ -127,12 +147,14 @@ function extractRequest(mail, index) {
       `location=${extractLocation(text)}`
     ]
   };
+  request.missingFields = requestMissingFields(request);
+  return request;
 }
 
 function extractTalent(mail, index) {
   const text = joinedText(mail);
   const skills = extractSkills(text);
-  return {
+  const talent = {
     id: `ingested_talent_${String(index + 1).padStart(3, "0")}`,
     sourceMailId: mail.id,
     code: `ingested_engineer_${String(index + 1).padStart(3, "0")}`,
@@ -149,6 +171,8 @@ function extractTalent(mail, index) {
       `location=${extractLocation(text)}`
     ]
   };
+  talent.missingFields = talentMissingFields(talent);
+  return talent;
 }
 
 function buildScenario(mails) {
@@ -160,10 +184,30 @@ function buildScenario(mails) {
   mails.forEach((mail, index) => {
     const classification = classifications[index];
     if (classification.type === "案件" || classification.type === "複合") {
-      requests.push(extractRequest(mail, requests.length));
+      const request = extractRequest(mail, requests.length);
+      if (request.missingFields.includes("必須スキル") || request.missingFields.includes("単価")) {
+        pending.push({
+          id: mail.id,
+          subject: mail.subject,
+          type: "抽出不足",
+          reason: `案件不足: ${request.missingFields.join(" / ")}`
+        });
+      } else {
+        requests.push(request);
+      }
     }
     if (classification.type === "人材" || classification.type === "複合") {
-      talents.push(extractTalent(mail, talents.length));
+      const talent = extractTalent(mail, talents.length);
+      if (talent.missingFields.includes("スキル") || talent.missingFields.includes("希望単価")) {
+        pending.push({
+          id: mail.id,
+          subject: mail.subject,
+          type: "抽出不足",
+          reason: `人材不足: ${talent.missingFields.join(" / ")}`
+        });
+      } else {
+        talents.push(talent);
+      }
     }
     if (classification.type === "その他" || classification.type === "判定不能") {
       pending.push({
@@ -207,6 +251,21 @@ function run() {
     score: row.score,
     rank: row.rank
   })));
+  console.log("抽出不足");
+  console.table([
+    ...scenario.requests.map((request) => ({
+      id: request.id,
+      source: request.sourceMailId,
+      kind: "案件",
+      missing: request.missingFields.join(" / ") || "なし"
+    })),
+    ...scenario.talents.map((talent) => ({
+      id: talent.id,
+      source: talent.sourceMailId,
+      kind: "人材",
+      missing: talent.missingFields.join(" / ") || "なし"
+    }))
+  ]);
   console.log(`保留: ${scenario.pending.length}件`);
   console.table(scenario.pending);
 }
@@ -216,5 +275,7 @@ if (require.main === module) run();
 module.exports = {
   buildScenario,
   extractRequest,
-  extractTalent
+  extractTalent,
+  requestMissingFields,
+  talentMissingFields
 };
