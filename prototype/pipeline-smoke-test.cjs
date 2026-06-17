@@ -1,7 +1,7 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
-const { runPipeline } = require("./pipeline-runner.cjs");
+const { aggregateConfirmationNeeded, runPipeline } = require("./pipeline-runner.cjs");
 
 const inbox = JSON.parse(fs.readFileSync(path.join(__dirname, "sample-mail-inbox.json"), "utf8"));
 const replies = JSON.parse(fs.readFileSync(path.join(__dirname, "sample-replies.json"), "utf8"));
@@ -18,6 +18,14 @@ assert.equal(result.replyResults.length, 3);
 assert.equal(result.replyCandidates.length, 6);
 assert.equal(result.replyResults[0].candidates[0].status, "返信候補");
 assert.equal(result.replyResults[2].candidates.length, 0);
+
+const aggregated = aggregateConfirmationNeeded([
+  { kind: "下書き確認", id: "ingested_engineer_002", status: "確認必要", reason: "人材:勤務地" },
+  { kind: "下書き確認", id: "ingested_engineer_002", status: "確認必要", reason: "人材:勤務地" },
+  { kind: "返信確認", id: "reply_003", status: "未照合", reason: "一致なし" }
+]);
+assert.equal(aggregated.length, 2);
+assert.equal(aggregated.find((row) => row.id === "ingested_engineer_002").count, 2);
 
 console.log("OK: pipeline smoke test passed");
 console.table([{

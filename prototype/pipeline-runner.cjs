@@ -36,6 +36,16 @@ function runPipeline(inbox, replies) {
   };
 }
 
+function aggregateConfirmationNeeded(rows) {
+  const grouped = rows.reduce((acc, row) => {
+    const key = `${row.kind}|${row.id}|${row.status}|${row.reason}`;
+    if (!acc[key]) acc[key] = { ...row, count: 0 };
+    acc[key].count += 1;
+    return acc;
+  }, {});
+  return Object.values(grouped);
+}
+
 function printPipeline(result) {
   const confirmationNeeded = [
     ...result.scenario.pending.map((item) => ({
@@ -86,8 +96,8 @@ function printPipeline(result) {
     rank: row.rank
   })));
 
-  console.log("確認対象");
-  console.table(confirmationNeeded);
+  console.log("確認対象 集約");
+  console.table(aggregateConfirmationNeeded(confirmationNeeded));
 }
 
 function run() {
@@ -97,5 +107,6 @@ function run() {
 if (require.main === module) run();
 
 module.exports = {
+  aggregateConfirmationNeeded,
   runPipeline
 };
