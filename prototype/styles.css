@@ -194,6 +194,17 @@ textarea {
   font-size: 13px;
 }
 
+.small-action.is-primary {
+  background: #0f766e;
+  border-color: #0f766e;
+  color: #ffffff;
+}
+
+.small-action.is-primary:hover {
+  background: #115e59;
+  border-color: #115e59;
+}
+
 .notice {
   border: 1px solid #fed7aa;
   background: #fff7ed;
@@ -370,6 +381,13 @@ tr:last-child td { border-bottom: 0; }
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+.reason-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
 }
 
 .pill {

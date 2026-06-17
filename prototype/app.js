@@ -7,7 +7,7 @@ const state = {
   sendThreshold: 80,
   maxSendPerTalent: 3,
   showMatchSettings: false,
-  showUnsentQueue: false,
+  showUnsentQueue: true,
   sentProposalIds: []
 };
 
@@ -367,6 +367,18 @@ function pills(list, type = "") {
   return `<div class="pill-list">${list.map((item) => pill(item, type)).join("")}</div>`;
 }
 
+function matchBreakdown(match) {
+  return `
+    <div class="reason-list">
+      ${match.reasons.map((reason) => {
+        const type = reason.includes("NG") || reason.includes("なし") ? "warn" : "";
+        return pill(reason, type);
+      }).join("")}
+      ${pill(match.warning, match.warning.includes("不足") ? "warn" : "gray")}
+    </div>
+  `;
+}
+
 function table(headers, rows) {
   return `<div class="table-wrap"><table><thead><tr>${headers.map((h) => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div>`;
 }
@@ -456,22 +468,21 @@ function renderUnsentQueue(proposals) {
     <section id="unsentQueue" class="panel">
       <div class="toolbar">
         <h2>未送信一覧</h2>
-        <span class="muted">点数が高い順 / 同一人材は${state.maxSendPerTalent}件まで</span>
+        <span class="muted">テスト表示です。外部送信はしません / 点数が高い順 / 同一人材は${state.maxSendPerTalent}件まで</span>
       </div>
       ${proposals.length ? table(
-        ["案件/人材", "送信先", "スコア", "判断", "操作"],
+        ["案件/人材", "送信先", "スコア", "判断理由", "操作"],
         proposals.filter(matchesQuery).map((proposal) => `
           <tr>
             <td>
               <strong>${proposal.request.subject}</strong><br>
-              <span class="muted">${proposal.talent.code} / ${proposal.talent.role}</span><br>
-              <span class="muted">${proposal.match.reasons.join(" / ")}</span>
+              <span class="muted">${proposal.talent.code} / ${proposal.talent.role}</span>
             </td>
             <td>${proposal.customer.company}<br><span class="muted">${proposal.customer.person}${proposal.customer.honorific} / ${proposal.customer.email}</span></td>
             <td><strong>${proposal.match.score}点</strong><br><span class="muted">${proposal.match.rank}</span></td>
-            <td>${pill("送信対象")}<br><span class="muted">${proposal.match.warning}</span></td>
+            <td>${pill("未送信", "danger")}${matchBreakdown(proposal.match)}</td>
             <td>
-              <button class="small-action" onclick="setRequest('${proposal.request.id}'); setTalent('${proposal.talent.id}'); markProposalSent('${proposal.id}')">送信する</button>
+              <button class="small-action is-primary" onclick="setRequest('${proposal.request.id}'); setTalent('${proposal.talent.id}'); markProposalSent('${proposal.id}')">テスト送信済みにする</button>
             </td>
           </tr>
         `)
@@ -601,8 +612,7 @@ function renderMatchCards(matches) {
         <div>
           <strong>${request.subject}</strong>
           <div>${talent.code} / ${talent.role}</div>
-          <div class="meta">${match.reasons.join(" / ")}</div>
-          <div class="meta">${match.warning}</div>
+          ${matchBreakdown(match)}
         </div>
         <button class="small-action" onclick="setTalent('${talent.id}'); setView('send')">送信準備</button>
       </div>
