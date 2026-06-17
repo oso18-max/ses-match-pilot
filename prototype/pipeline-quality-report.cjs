@@ -71,6 +71,7 @@ function summarize(filePath) {
     sendable: result.sendableRows.length,
     drafts: result.drafts.length,
     queue: result.queue.length,
+    resolvedQueue: result.resolvedQueue.length,
     executed: result.execution.executed.length,
     skipped: result.execution.skipped.length,
     history: result.history.length,

@@ -10,6 +10,12 @@ const result = runPipeline(inbox, replies);
 const csvResult = runPipeline(inbox, replies, {
   customers: loadCustomersFromCsv(path.join(__dirname, "sample-customers.csv"))
 });
+const resolvedResult = runPipeline(inbox, replies, {
+  customers: loadCustomersFromCsv(path.join(__dirname, "sample-customers.csv")),
+  reviewResolutions: [
+    { queueId: "send_queue_001", item: "人材:勤務地", note: "フルリモート確認済み" }
+  ]
+});
 
 assert.equal(result.scenario.classifications.length, 6);
 assert.equal(result.scenario.requests.length, 3);
@@ -31,6 +37,9 @@ assert.equal(csvResult.drafts.length, 2);
 assert.equal(csvResult.queue.length, 2);
 assert.equal(csvResult.execution.executed.length, 0);
 assert.equal(csvResult.execution.skipped.length, 2);
+assert.equal(resolvedResult.execution.executed.length, 1);
+assert.equal(resolvedResult.execution.executed[0].queueId, "send_queue_001");
+assert.equal(resolvedResult.execution.skipped.length, 1);
 assert.equal(csvResult.history[0].customerId, "customer_csv_001");
 assert.equal(csvResult.history.some((item) => item.company === "株式会社ガンマ"), false);
 
