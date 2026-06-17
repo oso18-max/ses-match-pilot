@@ -388,11 +388,50 @@ function parseCompanyTestTalent(text) {
   };
 }
 
+function parseCompanyTestCsvRows(text) {
+  const rows = [];
+  let row = [];
+  let field = "";
+  let quoted = false;
+  const source = String(text || "");
+
+  for (let index = 0; index < source.length; index += 1) {
+    const char = source[index];
+    const next = source[index + 1];
+
+    if (quoted && char === "\"" && next === "\"") {
+      field += "\"";
+      index += 1;
+    } else if (char === "\"") {
+      quoted = !quoted;
+    } else if (!quoted && char === ",") {
+      row.push(field);
+      field = "";
+    } else if (!quoted && (char === "\n" || char === "\r")) {
+      if (char === "\r" && next === "\n") index += 1;
+      row.push(field);
+      if (row.some((value) => value.trim() !== "")) rows.push(row);
+      row = [];
+      field = "";
+    } else {
+      field += char;
+    }
+  }
+
+  row.push(field);
+  if (row.some((value) => value.trim() !== "")) rows.push(row);
+  return rows;
+}
+
+function companyTestCsvHeaders(csvText) {
+  return parseCompanyTestCsvRows(csvText)[0]?.map((item) => item.trim()) || [];
+}
+
 function parseCompanyTestCustomers(csvText) {
-  const rows = String(csvText).trim().split(/\r?\n/).filter(Boolean);
-  const headers = rows.shift()?.split(",").map((item) => item.trim()) || [];
+  const rows = parseCompanyTestCsvRows(csvText);
+  const headers = rows.shift()?.map((item) => item.trim()) || [];
   return rows.map((line, index) => {
-    const values = line.split(",").map((item) => item.trim());
+    const values = line.map((item) => item.trim());
     const row = Object.fromEntries(headers.map((header, headerIndex) => [header, values[headerIndex] || ""]));
     return {
       id: `company_test_customer_${index + 1}`,
@@ -412,6 +451,10 @@ function validateCompanyTestInput() {
   const errors = [];
   if (extractKnownSkills(state.companyTest.requestText).length === 0) errors.push("案件情報にスキルがありません");
   if (extractKnownSkills(state.companyTest.talentText).length === 0) errors.push("人材情報にスキルがありません");
+  const headers = companyTestCsvHeaders(state.companyTest.customerCsv);
+  ["company", "person", "email", "sendable"].forEach((header) => {
+    if (!headers.includes(header)) errors.push(`送信先CSVに ${header} 列がありません`);
+  });
   const customers = parseCompanyTestCustomers(state.companyTest.customerCsv);
   if (!customers.length) errors.push("送信先CSVがありません");
   customers.forEach((customer, index) => {
@@ -1322,6 +1365,8 @@ if (typeof module !== "undefined") {
     clearCompanyTestInput,
     parseCompanyTestRequest,
     parseCompanyTestTalent,
+    parseCompanyTestCsvRows,
+    companyTestCsvHeaders,
     parseCompanyTestCustomers,
     validateCompanyTestInput,
     companyTestReport,

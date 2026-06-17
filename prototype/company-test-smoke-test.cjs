@@ -35,6 +35,8 @@ assert.equal(match.score >= 80, true);
 assert.match(report, /マッチング点数/);
 assert.match(report, /送信可能: 1件/);
 assert.equal(app.validateCompanyTestInput().length, 0);
+assert.equal(app.parseCompanyTestCsvRows("company,person,email,sendable\n\"A,Inc\",田中,a@example.invalid,送信可")[1][0], "A,Inc");
+assert.equal(app.companyTestCsvHeaders("company,person,email,sendable\nA,田中,a@example.invalid,送信可").includes("email"), true);
 assert.equal(typeof app.resetCompanyTestSample, "function");
 assert.equal(typeof app.clearCompanyTestInput, "function");
 assert.equal(typeof app.downloadCompanyTestReport, "function");
