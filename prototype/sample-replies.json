@@ -1,0 +1,23 @@
+[
+  {
+    "id": "reply_001",
+    "receivedAt": "2026-06-17 13:20",
+    "from": "tanaka@alpha.example.invalid",
+    "subject": "Re: Javaバックエンド人材のご提案",
+    "body": "ご提案ありがとうございます。詳細を確認したいです。"
+  },
+  {
+    "id": "reply_002",
+    "receivedAt": "2026-06-17 14:05",
+    "from": "unknown@example.invalid",
+    "subject": "Re: Java/Spring Boot案件について",
+    "body": "先ほどのJava案件の件でご相談です。"
+  },
+  {
+    "id": "reply_003",
+    "receivedAt": "2026-06-17 15:10",
+    "from": "news@example.invalid",
+    "subject": "サービス案内",
+    "body": "新サービスのご案内です。"
+  }
+]
