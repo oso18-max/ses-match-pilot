@@ -1,0 +1,4 @@
+id,company,person,honorific,email,phone,status,owner,sendable,ngSkills,ngConditions,templateGroup,memo
+customer_csv_001,株式会社アルファ,田中,様,tanaka@alpha.example.invalid,03-0000-0001,契約中,佐藤,送信可,,,標準,
+customer_csv_002,ベータソリューションズ株式会社,採用担当,様,ses@beta.example.invalid,06-0000-0002,契約中,佐藤,送信可,常駐のみ,単価70万円超NG,丁寧,
+customer_csv_003,株式会社ガンマ,佐山,様,sato@gamma.example.invalid,092-000-0003,停止,佐藤,off,,送信停止中,停止,
