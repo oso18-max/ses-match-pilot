@@ -4,6 +4,7 @@ const { buildScenario } = require("./mail-ingest-runner.cjs");
 const { collectSendableRows } = require("./matching-runner.cjs");
 const { buildDrafts } = require("./proposal-preview-runner.cjs");
 const { buildSendQueue } = require("./send-queue-runner.cjs");
+const { executeQueue } = require("./send-execution-runner.cjs");
 const { buildSendHistory } = require("./send-history-runner.cjs");
 const { detectReplies } = require("./reply-detection-runner.cjs");
 const { loadCustomersFromCsv } = require("./customer-csv-importer.cjs");
@@ -26,6 +27,7 @@ function runPipeline(inbox, replies, options = {}) {
   const sendableRows = matchRows.filter((row) => row.sendStatus === "未送信候補");
   const drafts = buildDrafts(inbox, options);
   const queue = buildSendQueue(inbox, options);
+  const execution = executeQueue(queue, options.execution || {});
   const history = buildSendHistory(inbox, options);
   const replyResults = detectReplies(inbox, replies, options);
   const replyCandidates = replyResults.flatMap((result) => result.candidates);
@@ -35,6 +37,7 @@ function runPipeline(inbox, replies, options = {}) {
     sendableRows,
     drafts,
     queue,
+    execution,
     history,
     replyResults,
     replyCandidates
@@ -87,6 +90,8 @@ function printPipeline(result) {
     sendable: result.sendableRows.length,
     drafts: result.drafts.length,
     queue: result.queue.length,
+    executed: result.execution.executed.length,
+    skipped: result.execution.skipped.length,
     history: result.history.length,
     replies: result.replyResults.length,
     replyCandidates: result.replyCandidates.length,
