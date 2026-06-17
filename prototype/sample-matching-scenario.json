@@ -1,0 +1,117 @@
+{
+  "settings": {
+    "sendThreshold": 80,
+    "maxSendPerTalent": 3
+  },
+  "requests": [
+    {
+      "id": "sample_req_001",
+      "subject": "Java/Spring Boot 即日 70万円 週3リモート",
+      "extracted": {
+        "role": "Javaバックエンド",
+        "required": ["Java", "Spring Boot", "PostgreSQL"],
+        "nice": ["AWS"],
+        "unitMax": 70,
+        "start": "即日",
+        "location": "東京",
+        "workStyle": "週3リモート"
+      }
+    },
+    {
+      "id": "sample_req_002",
+      "subject": "React/TypeScript フルリモート 来月開始",
+      "extracted": {
+        "role": "Reactフロント",
+        "required": ["React", "TypeScript"],
+        "nice": ["Next.js", "AWS"],
+        "unitMax": 75,
+        "start": "来月",
+        "location": "大阪",
+        "workStyle": "フルリモート"
+      }
+    },
+    {
+      "id": "sample_req_003",
+      "subject": "Python/SQL 常駐 62万円",
+      "extracted": {
+        "role": "Pythonデータ処理",
+        "required": ["Python", "SQL"],
+        "nice": ["PostgreSQL"],
+        "unitMax": 62,
+        "start": "翌々月",
+        "location": "福岡",
+        "workStyle": "常駐"
+      }
+    }
+  ],
+  "talents": [
+    {
+      "id": "sample_talent_001",
+      "code": "engineer_001",
+      "role": "Javaバックエンド",
+      "skills": ["Java", "Spring Boot", "PostgreSQL", "AWS"],
+      "unit": 68,
+      "available": "即日",
+      "location": "東京",
+      "workStyle": "週3リモート可"
+    },
+    {
+      "id": "sample_talent_002",
+      "code": "engineer_002",
+      "role": "Reactフロント",
+      "skills": ["React", "TypeScript", "Next.js", "AWS"],
+      "unit": 72,
+      "available": "来月",
+      "location": "大阪",
+      "workStyle": "フルリモート可"
+    },
+    {
+      "id": "sample_talent_003",
+      "code": "engineer_003",
+      "role": "Pythonデータ処理",
+      "skills": ["Python", "SQL", "PostgreSQL"],
+      "unit": 66,
+      "available": "翌々月",
+      "location": "福岡",
+      "workStyle": "常駐可"
+    }
+  ],
+  "customers": [
+    {
+      "id": "sample_customer_001",
+      "company": "株式会社アルファ",
+      "person": "田中",
+      "email": "tanaka@alpha.example.invalid",
+      "sendable": true,
+      "ngSkills": [],
+      "ngConditions": []
+    },
+    {
+      "id": "sample_customer_002",
+      "company": "ベータソリューションズ株式会社",
+      "person": "採用ご担当者",
+      "email": "ses@beta.example.invalid",
+      "sendable": true,
+      "ngSkills": ["常駐のみ"],
+      "ngConditions": ["単価70万円超NG"]
+    },
+    {
+      "id": "sample_customer_003",
+      "company": "株式会社ガンマ",
+      "person": "佐藤",
+      "email": "sato@gamma.example.invalid",
+      "sendable": false,
+      "ngSkills": [],
+      "ngConditions": ["送信停止中"]
+    },
+    {
+      "id": "sample_customer_004",
+      "company": "デルタテック株式会社",
+      "person": "山本",
+      "email": "yamamoto@delta.example.invalid",
+      "sendable": true,
+      "ngSkills": ["Python"],
+      "ngConditions": []
+    }
+  ]
+}
