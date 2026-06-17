@@ -46,6 +46,12 @@ const publicViews = new Set([
   "settings"
 ]);
 
+const companyTestSample = {
+  requestText: state.companyTest.requestText,
+  talentText: state.companyTest.talentText,
+  customerCsv: state.companyTest.customerCsv
+};
+
 const requestTtlDays = 7;
 const talentTtlDays = 7;
 
@@ -260,6 +266,63 @@ const templates = [
 
 function normalize(value) {
   return String(value || "").toLowerCase();
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function saveCompanyTestDraft() {
+  if (typeof localStorage === "undefined") return;
+  localStorage.setItem("sesAutoSendCompanyTest", JSON.stringify({
+    requestText: state.companyTest.requestText,
+    talentText: state.companyTest.talentText,
+    customerCsv: state.companyTest.customerCsv
+  }));
+}
+
+function loadCompanyTestDraft() {
+  if (typeof localStorage === "undefined") return;
+  const saved = localStorage.getItem("sesAutoSendCompanyTest");
+  if (!saved) return;
+  try {
+    const draft = JSON.parse(saved);
+    state.companyTest.requestText = draft.requestText || state.companyTest.requestText;
+    state.companyTest.talentText = draft.talentText || state.companyTest.talentText;
+    state.companyTest.customerCsv = draft.customerCsv || state.companyTest.customerCsv;
+  } catch {
+    localStorage.removeItem("sesAutoSendCompanyTest");
+  }
+}
+
+function updateCompanyTestField(field, value) {
+  state.companyTest[field] = value;
+  state.companyTest.errors = [];
+  saveCompanyTestDraft();
+}
+
+function resetCompanyTestSample() {
+  state.companyTest.requestText = companyTestSample.requestText;
+  state.companyTest.talentText = companyTestSample.talentText;
+  state.companyTest.customerCsv = companyTestSample.customerCsv;
+  state.companyTest.result = null;
+  state.companyTest.errors = [];
+  saveCompanyTestDraft();
+  render();
+}
+
+function clearCompanyTestInput() {
+  state.companyTest.requestText = "";
+  state.companyTest.talentText = "";
+  state.companyTest.customerCsv = "company,person,email,sendable,ngSkills,ngConditions\n";
+  state.companyTest.result = null;
+  state.companyTest.errors = [];
+  saveCompanyTestDraft();
+  render();
 }
 
 function extractKnownSkills(text) {
@@ -585,6 +648,7 @@ function runCompanyTestMatching() {
   const match = score(request, talent);
   const targets = sendTargetsForCompanyTest(request, talent, testCustomers);
   state.companyTest.result = { request, talent, match, targets };
+  saveCompanyTestDraft();
   render();
 }
 
@@ -618,6 +682,26 @@ function companyTestReport(result) {
     "除外企業:",
     ...blockedTargets.map((target) => `- ${target.company}: ${target.blocked.join(" / ") || "除外"}`)
   ].join("\n");
+}
+
+function copyCompanyTestReport() {
+  const report = companyTestReport(state.companyTest.result);
+  if (!report || typeof navigator === "undefined" || !navigator.clipboard) return;
+  navigator.clipboard.writeText(report);
+}
+
+function downloadCompanyTestReport() {
+  const report = companyTestReport(state.companyTest.result);
+  if (!report || typeof document === "undefined") return;
+  const blob = new Blob([report], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "ses-auto-send-test-report.txt";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 function renderOverview() {
@@ -1032,19 +1116,21 @@ function renderCompanyTest() {
       <div class="tester-layout">
         <label class="field">
           <span>案件情報</span>
-          <textarea class="tester-textarea" oninput="state.companyTest.requestText = this.value">${state.companyTest.requestText}</textarea>
+          <textarea class="tester-textarea" oninput="updateCompanyTestField('requestText', this.value)">${escapeHtml(state.companyTest.requestText)}</textarea>
         </label>
         <label class="field">
           <span>人材情報</span>
-          <textarea class="tester-textarea" oninput="state.companyTest.talentText = this.value">${state.companyTest.talentText}</textarea>
+          <textarea class="tester-textarea" oninput="updateCompanyTestField('talentText', this.value)">${escapeHtml(state.companyTest.talentText)}</textarea>
         </label>
         <label class="field wide">
           <span>送信先CSV</span>
-          <textarea class="tester-textarea is-short" oninput="state.companyTest.customerCsv = this.value">${state.companyTest.customerCsv}</textarea>
+          <textarea class="tester-textarea is-short" oninput="updateCompanyTestField('customerCsv', this.value)">${escapeHtml(state.companyTest.customerCsv)}</textarea>
         </label>
       </div>
       <div class="toolbar">
         <button class="primary-action" onclick="runCompanyTestMatching()">マッチング実行</button>
+        <button class="ghost-action" onclick="resetCompanyTestSample()">サンプルに戻す</button>
+        <button class="ghost-action" onclick="clearCompanyTestInput()">入力を空にする</button>
         <span class="muted">案件、人材、送信先を変えて何度でも試せます。</span>
       </div>
       ${errors.length ? `
@@ -1081,7 +1167,11 @@ function renderCompanyTest() {
           <h2>提案メールプレビュー</h2>
           ${firstTarget ? `<div class="mail-preview">${templateFor(firstTarget, result.request, result.talent)}</div>` : `<p class="muted">送信先がありません。</p>`}
           <h2>テスト結果レポート</h2>
-          <textarea class="tester-textarea is-report" readonly>${companyTestReport(result)}</textarea>
+          <div class="toolbar">
+            <button class="ghost-action" onclick="copyCompanyTestReport()">コピー</button>
+            <button class="ghost-action" onclick="downloadCompanyTestReport()">テキスト保存</button>
+          </div>
+          <textarea class="tester-textarea is-report" readonly>${escapeHtml(companyTestReport(result))}</textarea>
         </section>
       </div>
     ` : `
@@ -1190,6 +1280,7 @@ function render() {
 }
 
 if (typeof document !== "undefined") {
+  loadCompanyTestDraft();
   const hashView = window.location.hash.replace("#", "");
   if (publicViews.has(hashView)) state.view = hashView;
 
@@ -1226,11 +1317,16 @@ if (typeof module !== "undefined") {
     proposalId,
     renderTestConsole,
     runTestSendOne,
+    updateCompanyTestField,
+    resetCompanyTestSample,
+    clearCompanyTestInput,
     parseCompanyTestRequest,
     parseCompanyTestTalent,
     parseCompanyTestCustomers,
     validateCompanyTestInput,
     companyTestReport,
+    copyCompanyTestReport,
+    downloadCompanyTestReport,
     runCompanyTestMatching
   };
 }

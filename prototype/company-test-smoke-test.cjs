@@ -8,6 +8,9 @@ const appSource = fs.readFileSync(path.join(__dirname, "app.js"), "utf8");
 
 assert.match(htmlSource, /data-view="companyTest"/);
 assert.match(appSource, /function renderCompanyTest/);
+assert.match(appSource, /function saveCompanyTestDraft/);
+assert.match(appSource, /function resetCompanyTestSample/);
+assert.match(appSource, /function downloadCompanyTestReport/);
 
 const request = app.parseCompanyTestRequest("Java Spring Boot案件\n単価: 70万\n勤務地: 東京\n稼働: 即日\n働き方: 週3リモート");
 const talent = app.parseCompanyTestTalent("Javaエンジニア\nJava Spring Boot PostgreSQL AWS\n希望単価: 68万\n勤務地: 東京\n稼働: 即日");
@@ -32,5 +35,8 @@ assert.equal(match.score >= 80, true);
 assert.match(report, /マッチング点数/);
 assert.match(report, /送信可能: 1件/);
 assert.equal(app.validateCompanyTestInput().length, 0);
+assert.equal(typeof app.resetCompanyTestSample, "function");
+assert.equal(typeof app.clearCompanyTestInput, "function");
+assert.equal(typeof app.downloadCompanyTestReport, "function");
 
 console.log("OK: company test smoke test passed");
