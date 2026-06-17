@@ -98,4 +98,13 @@ function printScenarioResult(scenario) {
   })));
 }
 
-printScenarioResult(readScenario(scenarioPath));
+if (require.main === module) {
+  printScenarioResult(readScenario(scenarioPath));
+}
+
+module.exports = {
+  collectSendableRows,
+  printScenarioResult,
+  rankMatches,
+  sendTargetsFor
+};
