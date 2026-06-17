@@ -2,10 +2,12 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { buildScenario } = require("./mail-ingest-runner.cjs");
 const { collectSendableRows } = require("./matching-runner.cjs");
+const { loadCustomersFromCsv } = require("./customer-csv-importer.cjs");
 
 const inboxPath = process.argv[2]
   ? path.resolve(process.argv[2])
   : path.join(__dirname, "sample-mail-inbox.json");
+const customerCsvPath = process.argv[3] ? path.resolve(process.argv[3]) : null;
 
 function readInbox(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -26,8 +28,10 @@ function createDraft({ request, talent, customer, row }) {
   ];
   return {
     to: customer.email,
+    customerId: customer.id,
     company: customer.company,
     person: customer.person,
+    templateGroup: customer.templateGroup || "標準",
     subject: `${talent.role}人材のご提案`,
     request: request.subject,
     talent: talent.code,
@@ -56,15 +60,16 @@ ${customer.person}様
   };
 }
 
-function buildDrafts(inbox) {
-  const scenario = buildScenario(inbox);
+function buildDrafts(inbox, options = {}) {
+  const scenario = buildScenario(inbox, options);
   const rows = collectSendableRows(scenario.requests, scenario.talents, scenario.customers, scenario.settings)
     .filter((row) => row.sendStatus === "未送信候補");
   return rows.map((row) => createDraft({ ...findDraftParts(scenario, row), row }));
 }
 
 function run() {
-  const drafts = buildDrafts(readInbox(inboxPath));
+  const options = customerCsvPath ? { customers: loadCustomersFromCsv(customerCsvPath) } : {};
+  const drafts = buildDrafts(readInbox(inboxPath), options);
   console.log(`提案メール下書き: ${drafts.length}件`);
   console.table(drafts.map((draft) => ({
     to: draft.to,

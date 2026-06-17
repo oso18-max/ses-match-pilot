@@ -1,10 +1,12 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { buildDrafts } = require("./proposal-preview-runner.cjs");
+const { loadCustomersFromCsv } = require("./customer-csv-importer.cjs");
 
 const inboxPath = process.argv[2]
   ? path.resolve(process.argv[2])
   : path.join(__dirname, "sample-mail-inbox.json");
+const customerCsvPath = process.argv[3] ? path.resolve(process.argv[3]) : null;
 
 function readInbox(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -16,8 +18,10 @@ function createHistoryItem(draft, index) {
     sentAt: "2026-06-17 12:00",
     status: "仮送信済み",
     reviewStatus: draft.status,
+    customerId: draft.customerId,
     company: draft.company,
     to: draft.to,
+    templateGroup: draft.templateGroup,
     subject: draft.subject,
     request: draft.request,
     talent: draft.talent,
@@ -27,12 +31,13 @@ function createHistoryItem(draft, index) {
   };
 }
 
-function buildSendHistory(inbox) {
-  return buildDrafts(inbox).map(createHistoryItem);
+function buildSendHistory(inbox, options = {}) {
+  return buildDrafts(inbox, options).map(createHistoryItem);
 }
 
 function run() {
-  const history = buildSendHistory(readInbox(inboxPath));
+  const options = customerCsvPath ? { customers: loadCustomersFromCsv(customerCsvPath) } : {};
+  const history = buildSendHistory(readInbox(inboxPath), options);
   console.log(`送信履歴 仮記録: ${history.length}件`);
   console.table(history.map((item) => ({
     id: item.id,

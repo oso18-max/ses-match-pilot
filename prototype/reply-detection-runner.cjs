@@ -1,6 +1,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { buildSendHistory } = require("./send-history-runner.cjs");
+const { loadCustomersFromCsv } = require("./customer-csv-importer.cjs");
 
 const inboxPath = process.argv[2]
   ? path.resolve(process.argv[2])
@@ -8,6 +9,7 @@ const inboxPath = process.argv[2]
 const repliesPath = process.argv[3]
   ? path.resolve(process.argv[3])
   : path.join(__dirname, "sample-replies.json");
+const customerCsvPath = process.argv[4] ? path.resolve(process.argv[4]) : null;
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -48,8 +50,8 @@ function detectReply(reply, history) {
     .sort((a, b) => b.confidence - a.confidence);
 }
 
-function detectReplies(inbox, replies) {
-  const history = buildSendHistory(inbox);
+function detectReplies(inbox, replies, options = {}) {
+  const history = buildSendHistory(inbox, options);
   return replies.map((reply) => ({
     reply,
     candidates: detectReply(reply, history)
@@ -59,7 +61,8 @@ function detectReplies(inbox, replies) {
 function run() {
   const inbox = readJson(inboxPath);
   const replies = readJson(repliesPath);
-  const results = detectReplies(inbox, replies);
+  const options = customerCsvPath ? { customers: loadCustomersFromCsv(customerCsvPath) } : {};
+  const results = detectReplies(inbox, replies, options);
   console.log(`返信検知: ${results.length}件`);
   console.table(results.flatMap((result) => (
     result.candidates.length

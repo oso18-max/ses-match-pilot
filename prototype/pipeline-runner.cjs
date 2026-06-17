@@ -5,6 +5,7 @@ const { collectSendableRows } = require("./matching-runner.cjs");
 const { buildDrafts } = require("./proposal-preview-runner.cjs");
 const { buildSendHistory } = require("./send-history-runner.cjs");
 const { detectReplies } = require("./reply-detection-runner.cjs");
+const { loadCustomersFromCsv } = require("./customer-csv-importer.cjs");
 
 const inboxPath = process.argv[2]
   ? path.resolve(process.argv[2])
@@ -12,18 +13,19 @@ const inboxPath = process.argv[2]
 const repliesPath = process.argv[3]
   ? path.resolve(process.argv[3])
   : path.join(__dirname, "sample-replies.json");
+const customerCsvPath = process.argv[4] ? path.resolve(process.argv[4]) : null;
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
-function runPipeline(inbox, replies) {
-  const scenario = buildScenario(inbox);
+function runPipeline(inbox, replies, options = {}) {
+  const scenario = buildScenario(inbox, options);
   const matchRows = collectSendableRows(scenario.requests, scenario.talents, scenario.customers, scenario.settings);
   const sendableRows = matchRows.filter((row) => row.sendStatus === "未送信候補");
-  const drafts = buildDrafts(inbox);
-  const history = buildSendHistory(inbox);
-  const replyResults = detectReplies(inbox, replies);
+  const drafts = buildDrafts(inbox, options);
+  const history = buildSendHistory(inbox, options);
+  const replyResults = detectReplies(inbox, replies, options);
   const replyCandidates = replyResults.flatMap((result) => result.candidates);
 
   return {
@@ -101,7 +103,8 @@ function printPipeline(result) {
 }
 
 function run() {
-  printPipeline(runPipeline(readJson(inboxPath), readJson(repliesPath)));
+  const options = customerCsvPath ? { customers: loadCustomersFromCsv(customerCsvPath) } : {};
+  printPipeline(runPipeline(readJson(inboxPath), readJson(repliesPath), options));
 }
 
 if (require.main === module) run();

@@ -66,6 +66,7 @@ function summarize(filePath) {
     mails: result.scenario.classifications.length,
     requests: result.scenario.requests.length,
     talents: result.scenario.talents.length,
+    customers: result.scenario.customers.length,
     pending: result.scenario.pending.length,
     sendable: result.sendableRows.length,
     drafts: result.drafts.length,

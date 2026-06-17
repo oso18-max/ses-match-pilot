@@ -2,10 +2,14 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const { aggregateConfirmationNeeded, runPipeline } = require("./pipeline-runner.cjs");
+const { loadCustomersFromCsv } = require("./customer-csv-importer.cjs");
 
 const inbox = JSON.parse(fs.readFileSync(path.join(__dirname, "sample-mail-inbox.json"), "utf8"));
 const replies = JSON.parse(fs.readFileSync(path.join(__dirname, "sample-replies.json"), "utf8"));
 const result = runPipeline(inbox, replies);
+const csvResult = runPipeline(inbox, replies, {
+  customers: loadCustomersFromCsv(path.join(__dirname, "sample-customers.csv"))
+});
 
 assert.equal(result.scenario.classifications.length, 6);
 assert.equal(result.scenario.requests.length, 3);
@@ -18,6 +22,10 @@ assert.equal(result.replyResults.length, 3);
 assert.equal(result.replyCandidates.length, 6);
 assert.equal(result.replyResults[0].candidates[0].status, "返信候補");
 assert.equal(result.replyResults[2].candidates.length, 0);
+assert.equal(csvResult.scenario.customers.length, 3);
+assert.equal(csvResult.drafts.length, 3);
+assert.equal(csvResult.history[0].customerId, "customer_csv_001");
+assert.equal(csvResult.history.some((item) => item.company === "株式会社ガンマ"), false);
 
 const aggregated = aggregateConfirmationNeeded([
   { kind: "下書き確認", id: "ingested_engineer_002", status: "確認必要", reason: "人材:勤務地" },

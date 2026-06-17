@@ -125,6 +125,16 @@ function importCustomersFromCsv(text) {
   };
 }
 
+function loadCustomersFromCsv(filePath) {
+  const result = importCustomersFromCsv(fs.readFileSync(filePath, "utf8"));
+  if (!result.accepted) {
+    const error = new Error(`Customer CSV rejected: ${path.basename(filePath)}`);
+    error.errors = result.errors;
+    throw error;
+  }
+  return result.customers;
+}
+
 function run() {
   const csvPath = process.argv[2] ? path.resolve(process.argv[2]) : defaultCsvPath;
   const result = importCustomersFromCsv(fs.readFileSync(csvPath, "utf8"));
@@ -150,6 +160,7 @@ if (require.main === module) run();
 
 module.exports = {
   importCustomersFromCsv,
+  loadCustomersFromCsv,
   parseCsv,
   splitList,
   toBoolean,
