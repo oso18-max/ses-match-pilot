@@ -49,6 +49,8 @@ http://127.0.0.1:4173/prototype/index.html#companyTest
 http://127.0.0.1:4173/prototype/company-test.html
 ```
 
+企業へ渡す場合は、まず上記の専用ページを使う。
+
 画面で見る順番:
 - `テスト`
 - `企業テスト`

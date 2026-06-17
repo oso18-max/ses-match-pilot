@@ -755,6 +755,20 @@ function companyTestReport(result) {
   ].join("\n");
 }
 
+function companyTestCsvTemplate() {
+  return [
+    "company,person,email,sendable,ngSkills,ngConditions",
+    "株式会社サンプル,田中,tanaka@example.invalid,送信可,,",
+    "株式会社停止先,佐藤,sato@example.invalid,停止,,",
+    "株式会社NG先,鈴木,suzuki@example.invalid,送信可,常駐のみ,単価70万円超NG"
+  ].join("\n");
+}
+
+function copyCompanyTestCsvTemplate() {
+  if (typeof navigator === "undefined" || !navigator.clipboard) return;
+  navigator.clipboard.writeText(companyTestCsvTemplate());
+}
+
 function copyCompanyTestReport() {
   const report = companyTestReport(state.companyTest.result);
   if (!report || typeof navigator === "undefined" || !navigator.clipboard) return;
@@ -1185,6 +1199,21 @@ function renderCompanyTest() {
       <div class="notice">
         企業テストは、案件情報・人材情報・送信先CSVを貼って「マッチング実行」を押すだけです。実メール送信は発生しません。
       </div>
+      <div class="guide-grid">
+        <div class="guide-card">
+          <strong>案件情報</strong>
+          <span>必須スキル、尚可スキル、単価、勤務地、稼働時期、働き方を文章で貼れます。</span>
+        </div>
+        <div class="guide-card">
+          <strong>人材情報</strong>
+          <span>スキル、希望単価、勤務地、稼働可能時期、リモート可否を文章で貼れます。</span>
+        </div>
+        <div class="guide-card">
+          <strong>送信先CSV</strong>
+          <span>列は company, person, email, sendable, ngSkills, ngConditions です。</span>
+          <button class="small-action" onclick="copyCompanyTestCsvTemplate()">CSVテンプレをコピー</button>
+        </div>
+      </div>
       <div class="tester-layout">
         <label class="field">
           <span>案件情報</span>
@@ -1433,6 +1462,8 @@ if (typeof module !== "undefined") {
     validateCompanyTestInput,
     companyTestReport,
     copyCompanyTestReport,
+    companyTestCsvTemplate,
+    copyCompanyTestCsvTemplate,
     downloadCompanyTestReport,
     runCompanyTestMatching
   };

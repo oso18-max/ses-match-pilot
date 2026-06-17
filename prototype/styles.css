@@ -430,6 +430,32 @@ textarea {
   gap: 14px;
 }
 
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.guide-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #f8fafc;
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.guide-card strong {
+  font-size: 14px;
+}
+
+.guide-card span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .tester-textarea {
   width: 100%;
   min-height: 210px;
@@ -611,6 +637,7 @@ tr:last-child td { border-bottom: 0; }
   .flow,
   .test-steps,
   .tester-layout,
+  .guide-grid,
   .form-grid { grid-template-columns: 1fr; }
   .action-card { grid-template-columns: 1fr; }
 }
