@@ -1,0 +1,58 @@
+[
+  {
+    "id": "mail_001",
+    "subject": "【急募】Java/Spring Boot案件のご相談",
+    "body": "お世話になっております。Java/Spring Boot、PostgreSQL必須、AWS尚可、単価70万円、即日開始、東京、週3リモートの案件です。",
+    "attachments": []
+  },
+  {
+    "id": "mail_002",
+    "subject": "スキルシート送付",
+    "body": "お世話になっております。弊社要員のスキルシートを送付いたします。来月より稼働可能、React/TypeScript経験あり、希望単価72万円です。",
+    "attachments": [
+      {
+        "filename": "engineer_002_skill_sheet.docx",
+        "text": "React TypeScript Next.js AWS 経験5年 フルリモート可 希望単価72万円 稼働 来月"
+      }
+    ]
+  },
+  {
+    "id": "mail_003",
+    "subject": "Python案件資料",
+    "body": "詳細は添付をご確認ください。",
+    "attachments": [
+      {
+        "filename": "python_batch_project.pdf",
+        "text": "Python SQL PostgreSQL バッチ改修 常駐 福岡 単価62万円 開始 翌々月"
+      }
+    ]
+  },
+  {
+    "id": "mail_004",
+    "subject": "Re: お打ち合わせ日程",
+    "body": "ご連絡ありがとうございます。明日15時でお願いいたします。",
+    "attachments": []
+  },
+  {
+    "id": "mail_005",
+    "subject": "案件と人材のご相談",
+    "body": "Java案件があります。あわせてJava要員のスキルシートも添付します。単価、稼働、勤務地は添付をご確認ください。",
+    "attachments": [
+      {
+        "filename": "java_engineer_skill.xlsx",
+        "text": "Java Spring Boot PostgreSQL AWS 経験6年 即日稼働 希望単価68万円"
+      }
+    ]
+  },
+  {
+    "id": "mail_006",
+    "subject": "資料共有",
+    "body": "先ほどの件です。ご確認ください。",
+    "attachments": [
+      {
+        "filename": "document.pdf",
+        "text": ""
+      }
+    ]
+  }
+]
