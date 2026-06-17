@@ -422,7 +422,7 @@ function renderOverview() {
   return `
     <div class="metrics">
       <div class="metric is-accent"><span>マッチング数</span><strong>${matchCount}</strong><small>提案候補あり</small></div>
-      <button class="metric metric-button is-danger" type="button" onclick="showUnsentQueue()"><span>未送信</span><strong>${unsentCount}</strong><small>クリックで一覧</small></button>
+      <button class="metric metric-button is-danger" type="button" onclick="showUnsentQueue()"><span>未送信</span><strong>${unsentCount}</strong><small class="metric-cta">クリックで一覧を表示</small></button>
       <div class="metric is-success"><span>送信済み</span><strong>${sentCount}</strong><small>本日の提案数</small></div>
       <div class="metric"><span>返信通知</span><strong>${replies.length}</strong><small>確認待ち</small></div>
     </div>

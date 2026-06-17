@@ -275,6 +275,17 @@ textarea {
   font-weight: 700;
 }
 
+.metric .metric-cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  margin-top: 9px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: var(--danger);
+}
+
 .grid-2 {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
