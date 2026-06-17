@@ -40,5 +40,6 @@ assert.equal(app.companyTestCsvHeaders("company,person,email,sendable\nA,田中,
 assert.equal(typeof app.resetCompanyTestSample, "function");
 assert.equal(typeof app.clearCompanyTestInput, "function");
 assert.equal(typeof app.downloadCompanyTestReport, "function");
+assert.equal(typeof app.clearCompanyTestHistory, "function");
 
 console.log("OK: company test smoke test passed");

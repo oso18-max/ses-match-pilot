@@ -28,6 +28,7 @@ const state = {
 ベータソリューションズ株式会社,採用担当,ses@beta.example.invalid,送信可,常駐のみ,単価70万円超NG
 株式会社ガンマ,佐藤,sato@gamma.example.invalid,停止,,`,
     result: null,
+    history: [],
     errors: []
   }
 };
@@ -281,7 +282,8 @@ function saveCompanyTestDraft() {
   localStorage.setItem("sesAutoSendCompanyTest", JSON.stringify({
     requestText: state.companyTest.requestText,
     talentText: state.companyTest.talentText,
-    customerCsv: state.companyTest.customerCsv
+    customerCsv: state.companyTest.customerCsv,
+    history: state.companyTest.history
   }));
 }
 
@@ -294,6 +296,7 @@ function loadCompanyTestDraft() {
     state.companyTest.requestText = draft.requestText || state.companyTest.requestText;
     state.companyTest.talentText = draft.talentText || state.companyTest.talentText;
     state.companyTest.customerCsv = draft.customerCsv || state.companyTest.customerCsv;
+    state.companyTest.history = Array.isArray(draft.history) ? draft.history.slice(0, 10) : [];
   } catch {
     localStorage.removeItem("sesAutoSendCompanyTest");
   }
@@ -310,6 +313,7 @@ function resetCompanyTestSample() {
   state.companyTest.talentText = companyTestSample.talentText;
   state.companyTest.customerCsv = companyTestSample.customerCsv;
   state.companyTest.result = null;
+  state.companyTest.history = [];
   state.companyTest.errors = [];
   saveCompanyTestDraft();
   render();
@@ -691,6 +695,30 @@ function runCompanyTestMatching() {
   const match = score(request, talent);
   const targets = sendTargetsForCompanyTest(request, talent, testCustomers);
   state.companyTest.result = { request, talent, match, targets };
+  addCompanyTestHistory(state.companyTest.result);
+  saveCompanyTestDraft();
+  render();
+}
+
+function addCompanyTestHistory(result) {
+  const sendableTargets = result.targets.filter((target) => target.canSend);
+  const blockedTargets = result.targets.filter((target) => !target.canSend);
+  state.companyTest.history = [
+    {
+      testedAt: new Date().toLocaleString("ja-JP"),
+      subject: result.request.subject,
+      talent: result.talent.role,
+      score: result.match.score,
+      rank: result.match.rank,
+      sendable: sendableTargets.length,
+      blocked: blockedTargets.length
+    },
+    ...state.companyTest.history
+  ].slice(0, 10);
+}
+
+function clearCompanyTestHistory() {
+  state.companyTest.history = [];
   saveCompanyTestDraft();
   render();
 }
@@ -1143,6 +1171,7 @@ function renderTestConsole() {
 function renderCompanyTest() {
   const result = state.companyTest.result;
   const errors = state.companyTest.errors;
+  const history = state.companyTest.history;
   const sendableTargets = result ? result.targets.filter((target) => target.canSend) : [];
   const blockedTargets = result ? result.targets.filter((target) => !target.canSend) : [];
   const firstTarget = sendableTargets[0] || result?.targets[0];
@@ -1223,6 +1252,25 @@ function renderCompanyTest() {
         <p class="muted">案件、人材、送信先CSVを入れて「マッチング実行」を押してください。</p>
       </section>
     `}
+    <section class="panel">
+      <div class="toolbar">
+        <h2>テスト履歴</h2>
+        <button class="ghost-action" onclick="clearCompanyTestHistory()">履歴クリア</button>
+      </div>
+      ${history.length ? table(
+        ["日時", "案件", "人材", "点数", "送信可能", "除外"],
+        history.map((item) => `
+          <tr>
+            <td>${item.testedAt}</td>
+            <td>${escapeHtml(item.subject)}</td>
+            <td>${escapeHtml(item.talent)}</td>
+            <td><strong>${item.score}点</strong><br><span class="muted">${item.rank}</span></td>
+            <td>${item.sendable}件</td>
+            <td>${item.blocked}件</td>
+          </tr>
+        `)
+      ) : `<p class="muted">まだ履歴はありません。</p>`}
+    </section>
   `;
 }
 
@@ -1363,6 +1411,8 @@ if (typeof module !== "undefined") {
     updateCompanyTestField,
     resetCompanyTestSample,
     clearCompanyTestInput,
+    clearCompanyTestHistory,
+    addCompanyTestHistory,
     parseCompanyTestRequest,
     parseCompanyTestTalent,
     parseCompanyTestCsvRows,
