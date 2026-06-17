@@ -831,18 +831,36 @@ function render() {
   document.getElementById("content").innerHTML = views[state.view]();
 }
 
-document.querySelectorAll(".nav-item").forEach((button) => {
-  button.addEventListener("click", () => setView(button.dataset.view));
-});
+if (typeof document !== "undefined") {
+  document.querySelectorAll(".nav-item").forEach((button) => {
+    button.addEventListener("click", () => setView(button.dataset.view));
+  });
 
-document.getElementById("searchInput").addEventListener("input", (event) => {
-  state.query = event.target.value;
+  document.getElementById("searchInput").addEventListener("input", (event) => {
+    state.query = event.target.value;
+    render();
+  });
+
+  document.getElementById("settingsBtn").addEventListener("click", () => {
+    state.showMatchSettings = true;
+    setView("settings");
+  });
+
   render();
-});
+}
 
-document.getElementById("settingsBtn").addEventListener("click", () => {
-  state.showMatchSettings = true;
-  setView("settings");
-});
-
-render();
+if (typeof module !== "undefined") {
+  module.exports = {
+    state,
+    skillSheets,
+    incomingRequests,
+    customers,
+    histories,
+    score,
+    rankedMatches,
+    matchBatches,
+    sendTargets,
+    unsentProposals,
+    proposalId
+  };
+}
