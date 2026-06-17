@@ -6,7 +6,9 @@ const state = {
   autoSend: false,
   sendThreshold: 80,
   maxSendPerTalent: 3,
-  showMatchSettings: false
+  showMatchSettings: false,
+  showUnsentQueue: false,
+  sentProposalIds: []
 };
 
 const requestTtlDays = 7;
@@ -297,6 +299,35 @@ function sendTargets(request = selectedRequest(), talent = selectedTalent()) {
   });
 }
 
+function proposalId(request, talent, customer) {
+  return `${request.id}_${talent.id}_${customer.id}`;
+}
+
+function unsentProposals(batches = matchBatches()) {
+  const proposals = [];
+  batches.forEach((batch) => {
+    batch.sendable.forEach((match) => {
+      const talent = skillSheets.find((item) => item.id === match.talentId);
+      sendTargets(batch.request, talent)
+        .filter((customer) => customer.canSend)
+        .forEach((customer) => {
+          const id = proposalId(batch.request, talent, customer);
+          if (!state.sentProposalIds.includes(id)) {
+            proposals.push({ id, request: batch.request, talent, customer, match });
+          }
+        });
+    });
+  });
+
+  const countsByTalent = {};
+  return proposals
+    .sort((a, b) => b.match.score - a.match.score)
+    .filter((proposal) => {
+      countsByTalent[proposal.talent.id] = (countsByTalent[proposal.talent.id] || 0) + 1;
+      return countsByTalent[proposal.talent.id] <= state.maxSendPerTalent;
+    });
+}
+
 function matchBatches() {
   return incomingRequests.map((request) => {
     const matches = rankedMatches(request);
@@ -368,18 +399,34 @@ function toggleMatchSettings() {
   render();
 }
 
+function showUnsentQueue() {
+  state.showUnsentQueue = true;
+  render();
+  document.getElementById("unsentQueue")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function markProposalSent(id) {
+  if (!state.sentProposalIds.includes(id)) state.sentProposalIds.push(id);
+  state.showUnsentQueue = true;
+  render();
+  document.getElementById("unsentQueue")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 function renderOverview() {
   const batches = matchBatches();
   const matchCount = batches.filter((batch) => batch.sendable.length > 0).length;
-  const unsentCount = Math.max(matchCount - histories.length, 0);
+  const proposals = unsentProposals(batches);
+  const unsentCount = proposals.length;
+  const sentCount = histories.length + state.sentProposalIds.length;
   const selectedBatch = batches.find((batch) => batch.request.id === state.selectedRequestId) || batches[0];
   return `
     <div class="metrics">
       <div class="metric is-accent"><span>マッチング数</span><strong>${matchCount}</strong><small>提案候補あり</small></div>
-      <div class="metric is-danger"><span>未送信</span><strong>${unsentCount}</strong><small>要処理</small></div>
-      <div class="metric is-success"><span>送信済み</span><strong>${histories.length}</strong><small>本日の提案数</small></div>
+      <button class="metric metric-button is-danger" type="button" onclick="showUnsentQueue()"><span>未送信</span><strong>${unsentCount}</strong><small>クリックで一覧</small></button>
+      <div class="metric is-success"><span>送信済み</span><strong>${sentCount}</strong><small>本日の提案数</small></div>
       <div class="metric"><span>返信通知</span><strong>${replies.length}</strong><small>確認待ち</small></div>
     </div>
+    ${state.showUnsentQueue ? renderUnsentQueue(proposals) : ""}
     ${state.showMatchSettings ? renderMatchSettingsPanel() : ""}
     <div class="grid-2">
       <section class="panel">
@@ -401,6 +448,35 @@ function renderOverview() {
         </div>
       </section>
     </div>
+  `;
+}
+
+function renderUnsentQueue(proposals) {
+  return `
+    <section id="unsentQueue" class="panel">
+      <div class="toolbar">
+        <h2>未送信一覧</h2>
+        <span class="muted">点数が高い順 / 同一人材は${state.maxSendPerTalent}件まで</span>
+      </div>
+      ${proposals.length ? table(
+        ["案件/人材", "送信先", "スコア", "判断", "操作"],
+        proposals.filter(matchesQuery).map((proposal) => `
+          <tr>
+            <td>
+              <strong>${proposal.request.subject}</strong><br>
+              <span class="muted">${proposal.talent.code} / ${proposal.talent.role}</span><br>
+              <span class="muted">${proposal.match.reasons.join(" / ")}</span>
+            </td>
+            <td>${proposal.customer.company}<br><span class="muted">${proposal.customer.person}${proposal.customer.honorific} / ${proposal.customer.email}</span></td>
+            <td><strong>${proposal.match.score}点</strong><br><span class="muted">${proposal.match.rank}</span></td>
+            <td>${pill("送信対象")}<br><span class="muted">${proposal.match.warning}</span></td>
+            <td>
+              <button class="small-action" onclick="setRequest('${proposal.request.id}'); setTalent('${proposal.talent.id}'); markProposalSent('${proposal.id}')">送信する</button>
+            </td>
+          </tr>
+        `)
+      ) : `<p class="muted">未送信はありません。</p>`}
+    </section>
   `;
 }
 

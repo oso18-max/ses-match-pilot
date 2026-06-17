@@ -218,6 +218,18 @@ textarea {
 .panel,
 .detail-panel { padding: 16px; }
 .metric { padding: 18px; }
+
+.metric-button {
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.metric-button:hover {
+  border-color: #f87171;
+  background: #fff1f1;
+}
+
 .metric.is-danger {
   border-color: #fecaca;
   background: #fff7f7;
@@ -306,6 +318,10 @@ textarea {
   gap: 10px;
   align-items: center;
   margin-bottom: 14px;
+}
+
+.toolbar h2 {
+  margin-bottom: 0;
 }
 
 .table-wrap {
