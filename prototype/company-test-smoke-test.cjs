@@ -59,6 +59,10 @@ assert.equal(typeof app.applyCompanyTestPreset, "function");
 assert.equal(typeof app.updateCompanyTestFeedbackCheck, "function");
 assert.equal(typeof app.clearCompanyTestInput, "function");
 assert.equal(typeof app.downloadCompanyTestReport, "function");
+assert.equal(app.companyTestPackage().version, 1);
+app.applyCompanyTestPackage({ requestText: "React案件", talentText: "React", customerCsv: "company,person,email,sendable\nA,田中,a@example.invalid,送信可" });
+assert.equal(app.state.companyTest.requestText, "React案件");
+assert.equal(typeof app.downloadCompanyTestPackage, "function");
 assert.equal(typeof app.clearCompanyTestHistory, "function");
 assert.equal(app.companyTestCsvTemplate().includes("company,person,email,sendable"), true);
 

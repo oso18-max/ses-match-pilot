@@ -204,6 +204,15 @@ textarea {
   color: var(--text);
 }
 
+.file-action {
+  display: inline-flex;
+  align-items: center;
+}
+
+.file-action input {
+  display: none;
+}
+
 .ghost-action:hover,
 .small-action:hover {
   border-color: #aeb8c5;

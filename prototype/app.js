@@ -928,6 +928,58 @@ function downloadCompanyTestReport() {
   URL.revokeObjectURL(url);
 }
 
+function companyTestPackage() {
+  return {
+    version: 1,
+    exportedAt: new Date().toLocaleString("ja-JP"),
+    requestText: state.companyTest.requestText,
+    talentText: state.companyTest.talentText,
+    customerCsv: state.companyTest.customerCsv,
+    feedbackText: state.companyTest.feedbackText,
+    feedbackChecks: state.companyTest.feedbackChecks
+  };
+}
+
+function downloadCompanyTestPackage() {
+  if (typeof document === "undefined") return;
+  const blob = new Blob([JSON.stringify(companyTestPackage(), null, 2)], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "ses-auto-send-test-input.json";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function applyCompanyTestPackage(packageData) {
+  state.companyTest.requestText = packageData.requestText || state.companyTest.requestText;
+  state.companyTest.talentText = packageData.talentText || state.companyTest.talentText;
+  state.companyTest.customerCsv = packageData.customerCsv || state.companyTest.customerCsv;
+  state.companyTest.feedbackText = packageData.feedbackText || "";
+  state.companyTest.feedbackChecks = { ...state.companyTest.feedbackChecks, ...(packageData.feedbackChecks || {}) };
+  state.companyTest.result = null;
+  state.companyTest.errors = [];
+  saveCompanyTestDraft();
+}
+
+function importCompanyTestPackage(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      applyCompanyTestPackage(JSON.parse(String(reader.result || "{}")));
+    } catch {
+      state.companyTest.errors = ["テスト入力JSONを読み込めませんでした"];
+    }
+    input.value = "";
+    render();
+  };
+  reader.readAsText(file);
+}
+
 function renderOverview() {
   const batches = matchBatches();
   const matchCount = batches.filter((batch) => batch.sendable.length > 0).length;
@@ -1406,6 +1458,8 @@ function renderCompanyTest() {
         <button class="primary-action" onclick="runCompanyTestMatching()">マッチング実行</button>
         <button class="ghost-action" onclick="resetCompanyTestSample()">サンプルに戻す</button>
         <button class="ghost-action" onclick="clearCompanyTestInput()">入力を空にする</button>
+        <button class="ghost-action" onclick="downloadCompanyTestPackage()">入力JSON保存</button>
+        <label class="ghost-action file-action">入力JSON読込<input type="file" accept="application/json" onchange="importCompanyTestPackage(this)"></label>
         <span class="muted">案件、人材、送信先を変えて何度でも試せます。</span>
       </div>
       ${errors.length ? `
@@ -1687,6 +1741,10 @@ if (typeof module !== "undefined") {
     companyTestCsvTemplate,
     copyCompanyTestCsvTemplate,
     downloadCompanyTestReport,
+    companyTestPackage,
+    downloadCompanyTestPackage,
+    applyCompanyTestPackage,
+    importCompanyTestPackage,
     runCompanyTestMatching
   };
 }
