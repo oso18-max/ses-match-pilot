@@ -7,6 +7,7 @@ const tests = [
   "company-test-smoke-test.cjs",
   "company-test-final-readiness.cjs",
   "company-test-readiness-smoke-test.cjs",
+  "publication-safety-scan.cjs",
   "deal-management-smoke-test.cjs",
   "interview-management-smoke-test.cjs",
   "local-store-smoke-test.cjs",

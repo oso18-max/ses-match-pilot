@@ -135,6 +135,12 @@ node prototype\run-all-smoke-tests.cjs
 node prototype\company-test-final-readiness.cjs
 ```
 
+公開前の安全スキャン:
+
+```powershell
+node prototype\publication-safety-scan.cjs
+```
+
 メール取込の品質確認:
 
 ```powershell

@@ -21,6 +21,7 @@ const triage = readText("COMPANY_TEST_TRIAGE.md");
 const security = readText("SECURITY_REVIEW.md");
 const companyPage = fs.readFileSync(path.join(__dirname, "company-test.html"), "utf8");
 const sampleStore = JSON.parse(fs.readFileSync(path.join(__dirname, "sample-local-store.json"), "utf8"));
+const safetyScan = fs.readFileSync(path.join(__dirname, "publication-safety-scan.cjs"), "utf8");
 
 const request = app.parseCompanyTestRequest("Java Spring Boot案件\n必須: Java, Spring Boot\n単価: 70万\n勤務地: 東京\n稼働: 即日");
 const talent = app.parseCompanyTestTalent("Javaエンジニア\nJava Spring Boot PostgreSQL\n希望単価: 68万\n勤務地: 東京\n稼働: 即日");
@@ -57,6 +58,11 @@ const checks = [
     item: "安全注意",
     ok: has(invite, /実メール本文、実スキルシート本文、個人情報は入れない/) && has(security, /企業テスト前セキュリティゲート/),
     detail: "実データ禁止と外部連携禁止を明記"
+  },
+  {
+    item: "公開前スキャン",
+    ok: has(safetyScan, /non-test-email/) && has(safetyScan, /network-code/),
+    detail: "実メール混入と外部通信コードを検査できる"
   },
   {
     item: "回収票",
