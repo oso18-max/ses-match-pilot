@@ -4,6 +4,7 @@ const path = require("node:path");
 const { loadCustomersFromCsv } = require("./customer-csv-importer.cjs");
 const { runPipeline } = require("./pipeline-runner.cjs");
 const { confirmationItems, createSharedLedger } = require("./shared-ledger-runner.cjs");
+const app = require("./app.js");
 
 const inbox = JSON.parse(fs.readFileSync(path.join(__dirname, "sample-mail-inbox.json"), "utf8"));
 const replies = JSON.parse(fs.readFileSync(path.join(__dirname, "sample-replies.json"), "utf8"));
@@ -32,6 +33,8 @@ assert.equal(ledger.executed[0].queueId, "send_queue_001");
 assert.equal(ledger.skipped[0].queueId, "send_queue_002");
 assert.equal(ledger.confirmations.some((item) => item.kind === "reply_review"), true);
 assert.equal(confirmationItems(result).length >= ledger.confirmations.length, true);
+assert.equal(app.sharedLedgerSummary().some((item) => item.label === "成約管理" && item.count === app.deals.length), true);
+assert.equal(app.sharedLedgerSummary().some((item) => item.label === "共有台帳サマリー"), false);
 
 console.log("OK: shared ledger smoke test passed");
 console.table([ledger.summary]);

@@ -758,6 +758,22 @@ function dealForInterview(interviewId) {
   return deals.find((item) => item.interviewId === interviewId);
 }
 
+function sharedLedgerSummary() {
+  const batches = matchBatches();
+  const proposals = unsentProposals(batches);
+  return [
+    { label: "案件メール", count: incomingRequests.length, status: "取込済み", view: "inbox" },
+    { label: "登録スキルシート", count: skillSheets.length, status: "提案可", view: "sheets" },
+    { label: "送信先", count: customers.length, status: `停止${customers.filter((customer) => !customer.sendable).length}件`, view: "customers" },
+    { label: "マッチング候補", count: batches.reduce((sum, batch) => sum + batch.sendable.length, 0), status: `${state.sendThreshold}点以上`, view: "matches" },
+    { label: "未送信", count: proposals.length, status: "確認待ち", view: "overview" },
+    { label: "送信履歴", count: histories.length + state.sentProposalIds.length, status: "履歴対象", view: "history" },
+    { label: "返信検知", count: replies.length, status: "確認待ち", view: "replies" },
+    { label: "面談管理", count: interviews.length, status: "進捗管理", view: "interviews" },
+    { label: "成約管理", count: deals.length, status: "粗利確認", view: "deals" }
+  ];
+}
+
 function selectedRequest() {
   return incomingRequests.find((item) => item.id === state.selectedRequestId) || incomingRequests[0];
 }
@@ -1328,6 +1344,23 @@ function renderOverview() {
     </div>
     ${state.showUnsentQueue ? renderUnsentQueue(proposals) : ""}
     ${state.showMatchSettings ? renderMatchSettingsPanel() : ""}
+    <section class="panel">
+      <div class="toolbar">
+        <h2>共有台帳サマリー</h2>
+        <span class="muted">PMハブ用の現在地です。実データ保存、外部送信、API接続はしていません。</span>
+      </div>
+      ${table(
+        ["項目", "件数", "状態", "見る"],
+        sharedLedgerSummary().map((item) => `
+          <tr>
+            <td><strong>${item.label}</strong></td>
+            <td>${item.count}件</td>
+            <td>${item.status}</td>
+            <td><button class="small-action" onclick="setView('${item.view}')">開く</button></td>
+          </tr>
+        `)
+      )}
+    </section>
     <div class="grid-2">
       <section class="panel">
         <div class="toolbar">
@@ -2144,6 +2177,7 @@ if (typeof module !== "undefined") {
     dealForInterview,
     dealGrossProfit,
     dealGrossRate,
+    sharedLedgerSummary,
     score,
     rankedMatches,
     matchBatches,
