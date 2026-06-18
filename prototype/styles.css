@@ -437,6 +437,32 @@ textarea {
   margin-bottom: 14px;
 }
 
+.handoff-banner {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.handoff-banner > div {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+  padding: 12px;
+  display: grid;
+  gap: 7px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+}
+
+.handoff-banner strong {
+  font-size: 14px;
+}
+
+.handoff-banner span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .guide-card {
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -637,6 +663,7 @@ tr:last-child td { border-bottom: 0; }
   .flow,
   .test-steps,
   .tester-layout,
+  .handoff-banner,
   .guide-grid,
   .form-grid { grid-template-columns: 1fr; }
   .action-card { grid-template-columns: 1fr; }

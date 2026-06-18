@@ -1196,6 +1196,20 @@ function renderCompanyTest() {
         <h2>企業テスト用マッチング</h2>
         <span class="muted">貼り付け入力で判定します。外部送信・API接続・Gmail接続はしません。</span>
       </div>
+      <div class="handoff-banner">
+        <div>
+          <strong>このテストで確認できること</strong>
+          <span>案件と人材の相性、送信可能な企業、除外理由、提案メールの雛形を確認できます。</span>
+        </div>
+        <div>
+          <strong>このテストで発生しないこと</strong>
+          <span>メール送信、Gmail連携、外部API接続、実データ保存は行いません。</span>
+        </div>
+        <div>
+          <strong>企業側にお願いしたいこと</strong>
+          <span>普段の案件文面に近い内容で貼り付け、判定結果が営業感覚に合うか確認してください。</span>
+        </div>
+      </div>
       <div class="notice">
         企業テストは、案件情報・人材情報・送信先CSVを貼って「マッチング実行」を押すだけです。実メール送信は発生しません。
       </div>
