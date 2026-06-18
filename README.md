@@ -136,6 +136,12 @@ node prototype\run-all-smoke-tests.cjs
 node prototype\company-test-final-readiness.cjs
 ```
 
+ローカルURL表示確認:
+
+```powershell
+node prototype\local-url-smoke-test.cjs
+```
+
 公開前の安全スキャン:
 
 ```powershell

@@ -11,6 +11,7 @@ const tests = [
   "deal-management-smoke-test.cjs",
   "interview-management-smoke-test.cjs",
   "local-store-smoke-test.cjs",
+  "local-url-smoke-test.cjs",
   "mail-ingest-smoke-test.cjs",
   "matching-smoke-test.cjs",
   "pipeline-edge-smoke-test.cjs",

@@ -23,6 +23,7 @@ const security = readText("SECURITY_REVIEW.md");
 const companyPage = fs.readFileSync(path.join(__dirname, "company-test.html"), "utf8");
 const sampleStore = JSON.parse(fs.readFileSync(path.join(__dirname, "sample-local-store.json"), "utf8"));
 const safetyScan = fs.readFileSync(path.join(__dirname, "publication-safety-scan.cjs"), "utf8");
+const localUrlSmoke = fs.readFileSync(path.join(__dirname, "local-url-smoke-test.cjs"), "utf8");
 
 const request = app.parseCompanyTestRequest("Java Spring Boot案件\n必須: Java, Spring Boot\n単価: 70万\n勤務地: 東京\n稼働: 即日");
 const talent = app.parseCompanyTestTalent("Javaエンジニア\nJava Spring Boot PostgreSQL\n希望単価: 68万\n勤務地: 東京\n稼働: 即日");
@@ -39,6 +40,11 @@ const checks = [
     item: "企業テスト画面",
     ok: has(companyPage, /data-default-view="companyTest"/),
     detail: "専用ページで企業テストを直接開ける"
+  },
+  {
+    item: "ローカルURL検証",
+    ok: has(localUrlSmoke, /local-static-server\.cjs/) && has(localUrlSmoke, /company-test\.html/) && has(localUrlSmoke, /index\.html/),
+    detail: "トップと企業テストURLの表示確認を自動化済み"
   },
   {
     item: "案内文",

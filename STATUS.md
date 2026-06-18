@@ -70,6 +70,7 @@ PMのいさおを起点に、実データなしでSES業務フロー、情報項
 - `PUBLICATION_APPROVAL_PREP.md` に公開URL化の承認前準備を追加済み
 - `company-test-final-readiness.cjs` に企業テスト最終チェックを追加済み
 - `publication-safety-scan.cjs` に実メール混入と外部通信コードの公開前安全スキャンを追加済み
+- `local-url-smoke-test.cjs` にトップページと企業テストURLのローカル表示確認を追加済み
 - 企業テスト結果に、企業コメント回収、送信先条件見直し、本番連携設計などのPM判定を追加済み
 - PMハブ用の共有台帳プロトタイプを追加済み
 - 品質レポートに、取込顧客数、除外顧客数、下書き化件数を追加済み
