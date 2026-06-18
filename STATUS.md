@@ -52,6 +52,7 @@ PMのいさおを起点に、実データなしでSES業務フロー、情報項
 - `COMPANY_TEST_HANDOFF.md` に企業テスト手順を追加済み
 - `COMPANY_TEST_FEEDBACK.md` に企業テストの回収票を追加済み
 - `SECURITY_REVIEW.md` に企業テスト前セキュリティゲートを追加済み
+- `company-test-readiness-smoke-test.cjs` に企業テスト前チェックを追加済み
 - PMハブ用の共有台帳プロトタイプを追加済み
 - 品質レポートに、取込顧客数、除外顧客数、下書き化件数を追加済み
 - 全体スモークテストは通過

@@ -4,6 +4,7 @@ const path = require("node:path");
 const tests = [
   "customer-csv-importer-smoke-test.cjs",
   "company-test-smoke-test.cjs",
+  "company-test-readiness-smoke-test.cjs",
   "deal-management-smoke-test.cjs",
   "interview-management-smoke-test.cjs",
   "local-store-smoke-test.cjs",
