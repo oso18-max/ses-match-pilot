@@ -54,6 +54,7 @@ const publicViews = new Set([
   "history",
   "replies",
   "interviews",
+  "deals",
   "test",
   "companyTest",
   "settings"
@@ -339,6 +340,45 @@ const interviews = [
     status: "見送り",
     result: "単価差",
     nextAction: "別人材を再提案"
+  }
+];
+
+const deals = [
+  {
+    id: "deal_001",
+    interviewId: "iv_002",
+    company: "株式会社アルファ",
+    request: "Java/Spring 案件",
+    talent: "engineer_001",
+    status: "成約",
+    startMonth: "2026-07",
+    salesUnit: 78,
+    payUnit: 68,
+    nextAction: "注文書確認"
+  },
+  {
+    id: "deal_002",
+    interviewId: "iv_001",
+    company: "ベータソリューションズ株式会社",
+    request: "React 管理画面",
+    talent: "engineer_002",
+    status: "条件調整",
+    startMonth: "2026-07",
+    salesUnit: 82,
+    payUnit: 72,
+    nextAction: "単価回答待ち"
+  },
+  {
+    id: "deal_003",
+    interviewId: "iv_003",
+    company: "デルタテック株式会社",
+    request: "Python バッチ改修",
+    talent: "engineer_003",
+    status: "失注",
+    startMonth: "2026-06",
+    salesUnit: 0,
+    payUnit: 0,
+    nextAction: "別案件へ回す"
   }
 ];
 
@@ -692,6 +732,30 @@ function interviewSummary() {
 
 function interviewForHistory(historyId) {
   return interviews.find((item) => item.historyId === historyId);
+}
+
+function dealGrossProfit(deal) {
+  return Math.max((deal.salesUnit || 0) - (deal.payUnit || 0), 0);
+}
+
+function dealGrossRate(deal) {
+  if (!deal.salesUnit) return 0;
+  return Math.round((dealGrossProfit(deal) / deal.salesUnit) * 100);
+}
+
+function dealSummary() {
+  return deals.reduce((acc, deal) => {
+    acc.count += 1;
+    if (deal.status === "成約") acc.closed += 1;
+    if (deal.status === "失注") acc.lost += 1;
+    acc.sales += deal.salesUnit || 0;
+    acc.gross += dealGrossProfit(deal);
+    return acc;
+  }, { count: 0, closed: 0, lost: 0, sales: 0, gross: 0 });
+}
+
+function dealForInterview(interviewId) {
+  return deals.find((item) => item.interviewId === interviewId);
 }
 
 function selectedRequest() {
@@ -1590,7 +1654,7 @@ function renderInterviews() {
         <div class="metric"><span>総件数</span><strong>${interviews.length}</strong><small>ダミーデータ</small></div>
       </div>
       ${table(
-        ["予定日時", "会社", "案件", "人材", "状態", "結果", "次アクション"],
+        ["予定日時", "会社", "案件", "人材", "状態", "成約", "結果", "次アクション"],
         interviews.filter(matchesQuery).map((item) => `
           <tr>
             <td>${item.scheduledAt}</td>
@@ -1598,8 +1662,44 @@ function renderInterviews() {
             <td>${item.request}</td>
             <td>${item.talent}</td>
             <td><span class="status ${item.status === "面談予定" ? "ok" : item.status === "見送り" ? "bad" : "warn"}">${item.status}</span></td>
+            <td>${dealForInterview(item.id) ? pill(dealForInterview(item.id).status, dealForInterview(item.id).status === "失注" ? "danger" : "") : pill("未設定", "gray")}</td>
             <td>${item.result}</td>
             <td>${item.nextAction}</td>
+          </tr>
+        `)
+      )}
+    </section>
+  `;
+}
+
+function renderDeals() {
+  const summary = dealSummary();
+  const grossRate = summary.sales ? Math.round((summary.gross / summary.sales) * 100) : 0;
+  return `
+    <section class="panel">
+      <div class="toolbar">
+        <h2>成約管理</h2>
+        <span class="muted">成約、条件調整、失注、売上単価、支払単価、粗利を確認します。</span>
+      </div>
+      <div class="metrics">
+        <div class="metric is-success"><span>成約</span><strong>${summary.closed}</strong><small>件</small></div>
+        <div class="metric is-danger"><span>失注</span><strong>${summary.lost}</strong><small>件</small></div>
+        <div class="metric is-accent"><span>月額売上</span><strong>${summary.sales}</strong><small>万円</small></div>
+        <div class="metric"><span>粗利</span><strong>${summary.gross}</strong><small>万円 / ${grossRate}%</small></div>
+      </div>
+      ${table(
+        ["開始月", "会社", "案件", "人材", "状態", "売上", "支払", "粗利", "次アクション"],
+        deals.filter(matchesQuery).map((deal) => `
+          <tr>
+            <td>${deal.startMonth}</td>
+            <td><strong>${deal.company}</strong><br><span class="muted">${deal.interviewId}</span></td>
+            <td>${deal.request}</td>
+            <td>${deal.talent}</td>
+            <td><span class="status ${deal.status === "成約" ? "ok" : deal.status === "失注" ? "bad" : "warn"}">${deal.status}</span></td>
+            <td>${deal.salesUnit}万円</td>
+            <td>${deal.payUnit}万円</td>
+            <td><strong>${dealGrossProfit(deal)}万円</strong><br><span class="muted">${dealGrossRate(deal)}%</span></td>
+            <td>${deal.nextAction}</td>
           </tr>
         `)
       )}
@@ -1966,6 +2066,7 @@ function updateTitle() {
     history: "送信履歴",
     replies: "返信検知",
     interviews: "面談管理",
+    deals: "成約管理",
     test: "テスト",
     companyTest: "企業テスト",
     settings: "設定"
@@ -1988,6 +2089,7 @@ function render() {
     history: renderHistory,
     replies: renderReplies,
     interviews: renderInterviews,
+    deals: renderDeals,
     test: renderTestConsole,
     companyTest: renderCompanyTest,
     settings: renderSettings
@@ -2035,8 +2137,13 @@ if (typeof module !== "undefined") {
     histories,
     replies,
     interviews,
+    deals,
     interviewSummary,
     interviewForHistory,
+    dealSummary,
+    dealForInterview,
+    dealGrossProfit,
+    dealGrossRate,
     score,
     rankedMatches,
     matchBatches,
