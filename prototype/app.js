@@ -1544,6 +1544,31 @@ function companyTestFeedbackStatus() {
   };
 }
 
+function companyTestReadinessItems() {
+  return [
+    {
+      item: "入力",
+      status: "ダミー/匿名のみ",
+      detail: "実メール本文、実スキルシート本文、個人情報は入れない"
+    },
+    {
+      item: "安全",
+      status: "外部送信なし",
+      detail: "メール送信、Gmail連携、外部API接続、公開URL反映はしない"
+    },
+    {
+      item: "回収",
+      status: "3点確認",
+      detail: "点数、除外理由、メール文面のチェックとコメントを回収する"
+    },
+    {
+      item: "判定",
+      status: "PM判定あり",
+      detail: "本番連携、条件見直し、読み取り精度確認の次アクションを出す"
+    }
+  ];
+}
+
 function companyTestCsvTemplate() {
   return [
     "company,person,email,sendable,ngSkills,ngConditions,ngWords,maxAge,maxCommerceLevel",
@@ -2186,6 +2211,7 @@ function renderCompanyTest() {
   const inputStatus = companyTestInputStatus();
   const parsedSummary = companyTestParsedSummary();
   const nextDecision = companyTestNextDecision(result);
+  const readinessItems = companyTestReadinessItems();
 
   return `
     <section class="panel">
@@ -2231,6 +2257,22 @@ function renderCompanyTest() {
         <strong>企業テストの合格ライン</strong>
         <span>点数・除外理由・メール文面の3つが営業感覚と大きくズレていなければ、次は本番連携設計へ進めます。</span>
       </div>
+      <section class="handoff-check-panel">
+        <div class="toolbar">
+          <h2>渡す前チェック</h2>
+          <span class="muted">企業に触ってもらう前に、この4点だけ確認します。</span>
+        </div>
+        ${table(
+          ["項目", "状態", "確認内容"],
+          readinessItems.map((item) => `
+            <tr>
+              <td><strong>${item.item}</strong></td>
+              <td><span class="status ok">${item.status}</span></td>
+              <td>${escapeHtml(item.detail)}</td>
+            </tr>
+          `)
+        )}
+      </section>
       <div class="toolbar">
         <span class="muted">サンプル切替</span>
         <button class="ghost-action" onclick="applyCompanyTestPreset('java')">Java案件</button>
@@ -2665,6 +2707,7 @@ if (typeof module !== "undefined") {
     companyTestScoreRows,
     companyTestBlockedSummary,
     companyTestFeedbackStatus,
+    companyTestReadinessItems,
     copyCompanyTestReport,
     companyTestCsvTemplate,
     copyCompanyTestCsvTemplate,
