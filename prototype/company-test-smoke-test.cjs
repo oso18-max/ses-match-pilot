@@ -7,7 +7,8 @@ const htmlSource = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
 const standaloneSource = fs.readFileSync(path.join(__dirname, "company-test.html"), "utf8");
 const appSource = fs.readFileSync(path.join(__dirname, "app.js"), "utf8");
 
-assert.match(htmlSource, /data-view="companyTest"/);
+assert.doesNotMatch(htmlSource, /data-view="companyTest">企業テスト/);
+assert.match(appSource, /setView\('companyTest'\)/);
 assert.match(standaloneSource, /data-default-view="companyTest"/);
 assert.match(standaloneSource, /id="content"/);
 assert.match(appSource, /function renderCompanyTest/);

@@ -1911,6 +1911,15 @@ function renderTestConsole() {
         ` : `<p class="muted">未送信候補はありません。</p>`}
       </section>
     </div>
+    <section class="panel">
+      <div class="toolbar">
+        <div>
+          <h2>企業テスト</h2>
+          <p class="muted">通常の管理画面ではありません。外部送信なしで、マッチング精度を検証する時だけ使います。</p>
+        </div>
+        <button class="ghost-action" onclick="setView('companyTest')">企業テストを開く</button>
+      </div>
+    </section>
   `;
 }
 
