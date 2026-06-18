@@ -707,6 +707,42 @@ function rankedMatches(request = selectedRequest()) {
     .sort((a, b) => b.score - a.score);
 }
 
+function conditionBlocksUnit(condition, talent) {
+  if (!condition.includes("単価") && !condition.includes("万")) return false;
+  const limit = parseOptionalNumber(condition);
+  if (!limit) return false;
+  if (condition.includes("以上")) return talent.unit >= limit;
+  return talent.unit > limit;
+}
+
+function conditionBlocksAge(condition, talent) {
+  if (!talent.age || !/(年齢|歳)/.test(condition)) return false;
+  const limit = parseOptionalNumber(condition);
+  if (!limit) return false;
+  if (condition.includes("以上")) return talent.age >= limit;
+  return talent.age > limit;
+}
+
+function conditionBlocksCommerce(condition, talent) {
+  if (talent.commerceLevel == null) return false;
+  const level = extractCommerceLevel(condition);
+  if (level == null) return false;
+  if (condition.includes("まで") || condition.includes("以下") || condition.includes("以内")) return talent.commerceLevel > level;
+  if (condition.includes("以降") || condition.includes("以上") || condition.includes("超") || /NG|ＮＧ|不可|禁止/.test(condition)) return talent.commerceLevel >= level;
+  return false;
+}
+
+function conditionNgWordHit(condition, combinedText) {
+  if (!/NG|ＮＧ|不可|禁止|除外/.test(condition)) return false;
+  if (/(単価|年齢|歳|商流)/.test(condition)) return false;
+  const candidates = condition
+    .replace(/NG|ＮＧ|不可|禁止|除外|のみ|対象外|[:：]/g, " ")
+    .split(/[、,|;\s]+/)
+    .map((item) => item.trim())
+    .filter((item) => item && !/\d/.test(item));
+  return candidates.some((word) => normalize(combinedText).includes(normalize(word)));
+}
+
 function customerBlockedReasons(customer, request, talent) {
   const blocked = [];
   const ngSkills = customer.ngSkills || [];
@@ -716,17 +752,15 @@ function customerBlockedReasons(customer, request, talent) {
 
   if (!customer.sendable) blocked.push("送信停止");
   if (ngSkills.some((ng) => talent.skills.includes(ng) || request.extracted.workStyle.includes(ng) || talent.workStyle.includes(ng))) blocked.push("NG条件");
-  if (ngConditions.includes("単価70万円超NG") && talent.unit > 70) blocked.push("単価NG");
+  if (ngConditions.some((condition) => conditionBlocksUnit(condition, talent))) blocked.push("単価NG");
   if (customer.maxAge && talent.age && talent.age > customer.maxAge) blocked.push("年齢NG");
   if (customer.maxCommerceLevel !== null && customer.maxCommerceLevel !== undefined && talent.commerceLevel !== null && talent.commerceLevel > customer.maxCommerceLevel) blocked.push("商流NG");
   if (ngWords.some((word) => normalize(combinedText).includes(normalize(word)))) blocked.push("NGワード");
 
   ngConditions.forEach((condition) => {
-    const conditionMaxAge = condition.includes("年齢") ? parseOptionalNumber(condition) : null;
-    const conditionMaxFlow = condition.includes("商流") ? extractCommerceLevel(condition) : null;
-    if (conditionMaxAge && talent.age && talent.age > conditionMaxAge) blocked.push("年齢NG");
-    if (conditionMaxFlow !== null && talent.commerceLevel !== null && talent.commerceLevel > conditionMaxFlow) blocked.push("商流NG");
-    if (condition.includes("外国籍") && normalize(combinedText).includes("外国籍")) blocked.push("NGワード");
+    if (conditionBlocksAge(condition, talent)) blocked.push("年齢NG");
+    if (conditionBlocksCommerce(condition, talent)) blocked.push("商流NG");
+    if (conditionNgWordHit(condition, combinedText)) blocked.push("NGワード");
   });
 
   return [...new Set(blocked)];
