@@ -53,6 +53,42 @@ const companyTestSample = {
   customerCsv: state.companyTest.customerCsv
 };
 
+const companyTestPresets = {
+  java: companyTestSample,
+  react: {
+    requestText: `React管理画面案件
+必須: React, TypeScript
+尚可: Next.js, AWS
+単価: 75万
+勤務地: 大阪
+稼働: 来月
+働き方: フルリモート`,
+    talentText: `Reactフロントエンドエンジニア
+スキル: React, TypeScript, Next.js, AWS
+希望単価: 72万
+勤務地: 大阪
+稼働: 来月
+働き方: フルリモート可`,
+    customerCsv: companyTestSample.customerCsv
+  },
+  python: {
+    requestText: `Pythonバッチ改修案件
+必須: Python, SQL
+尚可: PostgreSQL
+単価: 65万
+勤務地: 福岡
+稼働: 来月
+働き方: 常駐`,
+    talentText: `Pythonデータ処理エンジニア
+スキル: Python, SQL, PostgreSQL, ETL
+希望単価: 66万
+勤務地: 福岡
+稼働: 来月
+働き方: 常駐可`,
+    customerCsv: companyTestSample.customerCsv
+  }
+};
+
 const requestTtlDays = 7;
 const talentTtlDays = 7;
 
@@ -314,6 +350,17 @@ function resetCompanyTestSample() {
   state.companyTest.customerCsv = companyTestSample.customerCsv;
   state.companyTest.result = null;
   state.companyTest.history = [];
+  state.companyTest.errors = [];
+  saveCompanyTestDraft();
+  render();
+}
+
+function applyCompanyTestPreset(key) {
+  const preset = companyTestPresets[key] || companyTestSample;
+  state.companyTest.requestText = preset.requestText;
+  state.companyTest.talentText = preset.talentText;
+  state.companyTest.customerCsv = preset.customerCsv;
+  state.companyTest.result = null;
   state.companyTest.errors = [];
   saveCompanyTestDraft();
   render();
@@ -1244,6 +1291,12 @@ function renderCompanyTest() {
       <div class="notice">
         企業テストは、案件情報・人材情報・送信先CSVを貼って「マッチング実行」を押すだけです。実メール送信は発生しません。
       </div>
+      <div class="toolbar">
+        <span class="muted">サンプル切替</span>
+        <button class="ghost-action" onclick="applyCompanyTestPreset('java')">Java案件</button>
+        <button class="ghost-action" onclick="applyCompanyTestPreset('react')">React案件</button>
+        <button class="ghost-action" onclick="applyCompanyTestPreset('python')">Python案件</button>
+      </div>
       <div class="guide-grid">
         <div class="guide-card">
           <strong>案件情報</strong>
@@ -1503,6 +1556,7 @@ if (typeof module !== "undefined") {
     runTestSendOne,
     updateCompanyTestField,
     resetCompanyTestSample,
+    applyCompanyTestPreset,
     clearCompanyTestInput,
     clearCompanyTestHistory,
     addCompanyTestHistory,

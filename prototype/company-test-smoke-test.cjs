@@ -17,6 +17,8 @@ assert.match(appSource, /function downloadCompanyTestReport/);
 assert.match(appSource, /CSVテンプレをコピー/);
 assert.match(appSource, /このテストで確認できること/);
 assert.match(appSource, /メール送信、Gmail連携、外部API接続、実データ保存は行いません/);
+assert.match(appSource, /React案件/);
+assert.match(appSource, /Python案件/);
 
 const request = app.parseCompanyTestRequest("Java Spring Boot案件\n単価: 70万\n勤務地: 東京\n稼働: 即日\n働き方: 週3リモート");
 const talent = app.parseCompanyTestTalent("Javaエンジニア\nJava Spring Boot PostgreSQL AWS\n希望単価: 68万\n勤務地: 東京\n稼働: 即日");
@@ -45,6 +47,7 @@ assert.equal(app.validateCompanyTestInput().length, 0);
 assert.equal(app.parseCompanyTestCsvRows("company,person,email,sendable\n\"A,Inc\",田中,a@example.invalid,送信可")[1][0], "A,Inc");
 assert.equal(app.companyTestCsvHeaders("company,person,email,sendable\nA,田中,a@example.invalid,送信可").includes("email"), true);
 assert.equal(typeof app.resetCompanyTestSample, "function");
+assert.equal(typeof app.applyCompanyTestPreset, "function");
 assert.equal(typeof app.clearCompanyTestInput, "function");
 assert.equal(typeof app.downloadCompanyTestReport, "function");
 assert.equal(typeof app.clearCompanyTestHistory, "function");
