@@ -14,6 +14,7 @@ function has(text, pattern) {
 
 const handoff = readText("COMPANY_TEST_HANDOFF.md");
 const packageGuide = readText("COMPANY_TEST_PACKAGE.md");
+const dummyInputs = readText("COMPANY_TEST_DUMMY_INPUTS.md");
 const invite = readText("COMPANY_TEST_INVITE.md");
 const sampleReport = readText("COMPANY_TEST_SAMPLE_REPORT.md");
 const feedback = readText("COMPANY_TEST_FEEDBACK.md");
@@ -54,8 +55,13 @@ const checks = [
   },
   {
     item: "配布パッケージ",
-    ok: has(packageGuide, /企業へ渡すもの/) && has(packageGuide, /PMが確認するコマンド/) && has(packageGuide, /COMPANY_TEST_SAMPLE_REPORT\.md/) && has(packageGuide, /COMPANY_TEST_TRIAGE\.md/) && has(packageGuide, /COMPANY_TEST_RUN_LOG\.md/) && has(packageGuide, /PUBLICATION_APPROVAL_PREP\.md/),
+    ok: has(packageGuide, /企業へ渡すもの/) && has(packageGuide, /PMが確認するコマンド/) && has(packageGuide, /COMPANY_TEST_DUMMY_INPUTS\.md/) && has(packageGuide, /COMPANY_TEST_SAMPLE_REPORT\.md/) && has(packageGuide, /COMPANY_TEST_TRIAGE\.md/) && has(packageGuide, /COMPANY_TEST_RUN_LOG\.md/) && has(packageGuide, /PUBLICATION_APPROVAL_PREP\.md/),
     detail: "渡す資料と確認コマンドを1か所で見られる"
+  },
+  {
+    item: "ダミー入力",
+    ok: has(dummyInputs, /パターンA/) && has(dummyInputs, /パターンB/) && has(dummyInputs, /パターンC/) && has(dummyInputs, /example\.invalid/),
+    detail: "実データなしで貼り付けテストできる"
   },
   {
     item: "サンプル結果",

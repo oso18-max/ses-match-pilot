@@ -18,6 +18,7 @@ http://127.0.0.1:4173/prototype/company-test.html
 | --- | --- | --- |
 | 案内文 | `COMPANY_TEST_INVITE.md` | 企業へ送るコピー用文面 |
 | 手順 | `COMPANY_TEST_HANDOFF.md` | テストの進め方、合格ライン、渡す前チェック |
+| ダミー入力 | `COMPANY_TEST_DUMMY_INPUTS.md` | 実データなしで貼り付けできる案件、人材、送信先CSV |
 | 回収票 | `COMPANY_TEST_FEEDBACK.md` | 点数、除外理由、文面、操作性の評価回収 |
 | 整理表 | `COMPANY_TEST_TRIAGE.md` | 回収後の即修正、後回し、AI検討、本番連携の仕分け |
 | 実施ログ | `COMPANY_TEST_RUN_LOG.md` | 依頼日、返却日、PM判定、反映状態の管理 |

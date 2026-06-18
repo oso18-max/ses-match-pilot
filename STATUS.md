@@ -54,6 +54,7 @@ PMのいさおを起点に、実データなしでSES業務フロー、情報項
 - `FIELD_DICTIONARY.md` に画面、CSV、DBの項目名辞書を追加済み
 - マッチング管理に共有台帳サマリーを追加済み
 - `COMPANY_TEST_HANDOFF.md` に企業テスト手順を追加済み
+- `COMPANY_TEST_DUMMY_INPUTS.md` に実データなしで貼り付けできる企業テスト用ダミー入力を追加済み
 - `COMPANY_TEST_FEEDBACK.md` に企業テストの回収票を追加済み
 - `SECURITY_REVIEW.md` に企業テスト前セキュリティゲートを追加済み
 - `company-test-readiness-smoke-test.cjs` に企業テスト前チェックを追加済み
