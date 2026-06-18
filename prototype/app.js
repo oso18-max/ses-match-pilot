@@ -832,6 +832,32 @@ function companyTestVerdict(result) {
   };
 }
 
+function companyTestScoreRows(result) {
+  if (!result) return [];
+  return [
+    {
+      item: "必須スキル",
+      status: result.match.matchedRequired.length ? "一致あり" : "不足",
+      detail: result.match.matchedRequired.join(" / ") || "一致なし"
+    },
+    {
+      item: "尚可スキル",
+      status: result.match.matchedNice.length ? "一致あり" : "一致なし",
+      detail: result.match.matchedNice.join(" / ") || "一致なし"
+    },
+    {
+      item: "不足スキル",
+      status: result.match.missing.length ? "要確認" : "不足なし",
+      detail: result.match.missing.join(" / ") || "不足なし"
+    },
+    {
+      item: "判定理由",
+      status: result.match.cutoff ? "候補" : "見送り",
+      detail: result.match.reasons.join(" / ")
+    }
+  ];
+}
+
 function companyTestCsvTemplate() {
   return [
     "company,person,email,sendable,ngSkills,ngConditions",
@@ -1383,6 +1409,21 @@ function renderCompanyTest() {
             `)
           )}
         </section>
+        <section class="panel">
+          <h2>点数の内訳</h2>
+          ${table(
+            ["項目", "判定", "内容"],
+            companyTestScoreRows(result).map((row) => `
+              <tr>
+                <td><strong>${row.item}</strong></td>
+                <td>${row.status}</td>
+                <td>${escapeHtml(row.detail)}</td>
+              </tr>
+            `)
+          )}
+        </section>
+      </div>
+      <div class="grid-2">
         <section class="detail-panel">
           <h2>提案メールプレビュー</h2>
           ${firstTarget ? `<div class="mail-preview">${templateFor(firstTarget, result.request, result.talent)}</div>` : `<p class="muted">送信先がありません。</p>`}
@@ -1582,6 +1623,7 @@ if (typeof module !== "undefined") {
     validateCompanyTestInput,
     companyTestReport,
     companyTestVerdict,
+    companyTestScoreRows,
     copyCompanyTestReport,
     companyTestCsvTemplate,
     copyCompanyTestCsvTemplate,

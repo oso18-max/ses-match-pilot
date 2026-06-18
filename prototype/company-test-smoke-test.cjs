@@ -43,6 +43,7 @@ assert.equal(customers[0].sendable, true);
 assert.equal(customers[1].sendable, false);
 assert.equal(match.score >= 80, true);
 assert.equal(app.companyTestVerdict({ match, targets: [{ canSend: true }] }).label, "テスト提案可能");
+assert.equal(app.companyTestScoreRows({ match }).some((row) => row.item === "必須スキル"), true);
 assert.match(report, /マッチング点数/);
 assert.match(report, /送信可能: 1件/);
 assert.equal(app.validateCompanyTestInput().length, 0);
