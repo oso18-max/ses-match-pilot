@@ -775,7 +775,9 @@ function addCompanyTestHistory(result) {
       score: result.match.score,
       rank: result.match.rank,
       sendable: sendableTargets.length,
-      blocked: blockedTargets.length
+      blocked: blockedTargets.length,
+      feedback: state.companyTest.feedbackText ? "あり" : "なし",
+      checked: Object.values(state.companyTest.feedbackChecks).filter(Boolean).length
     },
     ...state.companyTest.history
   ].slice(0, 10);
@@ -1558,7 +1560,7 @@ function renderCompanyTest() {
         <button class="ghost-action" onclick="clearCompanyTestHistory()">履歴クリア</button>
       </div>
       ${history.length ? table(
-        ["日時", "案件", "人材", "点数", "送信可能", "除外"],
+        ["日時", "案件", "人材", "点数", "送信可能", "除外", "コメント", "確認"],
         history.map((item) => `
           <tr>
             <td>${item.testedAt}</td>
@@ -1567,6 +1569,8 @@ function renderCompanyTest() {
             <td><strong>${item.score}点</strong><br><span class="muted">${item.rank}</span></td>
             <td>${item.sendable}件</td>
             <td>${item.blocked}件</td>
+            <td>${item.feedback || "なし"}</td>
+            <td>${item.checked || 0}/3</td>
           </tr>
         `)
       ) : `<p class="muted">まだ履歴はありません。</p>`}
