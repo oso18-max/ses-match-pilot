@@ -29,6 +29,7 @@ const state = {
 株式会社ガンマ,佐藤,sato@gamma.example.invalid,停止,,`,
     result: null,
     history: [],
+    feedbackText: "",
     errors: []
   }
 };
@@ -319,6 +320,7 @@ function saveCompanyTestDraft() {
     requestText: state.companyTest.requestText,
     talentText: state.companyTest.talentText,
     customerCsv: state.companyTest.customerCsv,
+    feedbackText: state.companyTest.feedbackText,
     history: state.companyTest.history
   }));
 }
@@ -332,6 +334,7 @@ function loadCompanyTestDraft() {
     state.companyTest.requestText = draft.requestText || state.companyTest.requestText;
     state.companyTest.talentText = draft.talentText || state.companyTest.talentText;
     state.companyTest.customerCsv = draft.customerCsv || state.companyTest.customerCsv;
+    state.companyTest.feedbackText = draft.feedbackText || "";
     state.companyTest.history = Array.isArray(draft.history) ? draft.history.slice(0, 10) : [];
   } catch {
     localStorage.removeItem("sesAutoSendCompanyTest");
@@ -371,6 +374,7 @@ function clearCompanyTestInput() {
   state.companyTest.talentText = "";
   state.companyTest.customerCsv = "company,person,email,sendable,ngSkills,ngConditions\n";
   state.companyTest.result = null;
+  state.companyTest.feedbackText = "";
   state.companyTest.errors = [];
   saveCompanyTestDraft();
   render();
@@ -798,7 +802,10 @@ function companyTestReport(result) {
     ...sendableTargets.map((target) => `- ${target.company} / ${target.email}`),
     "",
     "除外企業:",
-    ...blockedTargets.map((target) => `- ${target.company}: ${target.blocked.join(" / ") || "除外"}`)
+    ...blockedTargets.map((target) => `- ${target.company}: ${target.blocked.join(" / ") || "除外"}`),
+    "",
+    "企業側コメント:",
+    state.companyTest.feedbackText || "未入力"
   ].join("\n");
 }
 
@@ -1452,6 +1459,8 @@ function renderCompanyTest() {
         <section class="detail-panel">
           <h2>提案メールプレビュー</h2>
           ${firstTarget ? `<div class="mail-preview">${templateFor(firstTarget, result.request, result.talent)}</div>` : `<p class="muted">送信先がありません。</p>`}
+          <h2>企業側コメント</h2>
+          <textarea class="tester-textarea is-short" placeholder="点数の納得感、除外理由、メール文面へのコメントを入力" oninput="updateCompanyTestField('feedbackText', this.value)">${escapeHtml(state.companyTest.feedbackText)}</textarea>
           <h2>テスト結果レポート</h2>
           <div class="toolbar">
             <button class="ghost-action" onclick="copyCompanyTestReport()">コピー</button>
