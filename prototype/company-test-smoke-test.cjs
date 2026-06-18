@@ -160,4 +160,17 @@ assert.equal(typeof app.downloadCompanyTestPackage, "function");
 assert.equal(typeof app.clearCompanyTestHistory, "function");
 assert.equal(app.companyTestCsvTemplate().includes("company,person,email,sendable"), true);
 
+app.applyCompanyTestPreset("blocked");
+app.runCompanyTestMatching();
+assert.equal(app.state.companyTest.result.targets.some((target) => target.blocked.includes("年齢NG")), true);
+assert.equal(app.state.companyTest.result.targets.some((target) => target.blocked.includes("商流NG")), true);
+assert.equal(app.state.companyTest.result.targets.some((target) => target.blocked.includes("NGワード")), true);
+
+app.applyCompanyTestPreset("ranking");
+app.runCompanyTestMatching();
+assert.equal(app.state.companyTest.result.talents.length, 3);
+assert.equal(app.state.companyTest.result.candidateMatches.length, 3);
+assert.equal(app.state.companyTest.result.eligibleMatches.length >= 1, true);
+assert.equal(app.state.companyTest.result.candidateMatches[0].score >= app.state.companyTest.result.candidateMatches[1].score, true);
+
 console.log("OK: company test smoke test passed");
