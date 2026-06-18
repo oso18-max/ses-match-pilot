@@ -53,6 +53,14 @@ START_COMPANY_TEST_SERVER.cmd
 node prototype\local-static-server.cjs
 ```
 
+起動確認:
+
+```text
+http://127.0.0.1:4173/health
+```
+
+`ok` と表示されればローカルサーバーは起動中です。
+
 普段開くトップページ:
 
 ```text

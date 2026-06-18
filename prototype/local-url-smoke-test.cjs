@@ -53,11 +53,14 @@ async function run() {
 
   try {
     await waitForServer();
+    const health = await request("/health");
     const index = await request("/prototype/index.html");
     const companyTest = await request("/prototype/company-test.html");
     const appJs = await request("/prototype/app.js");
     const css = await request("/prototype/styles.css");
 
+    assert.equal(health.statusCode, 200);
+    assert.equal(health.body, "ok");
     assert.equal(index.statusCode, 200);
     assert.match(index.body, /SES Auto Send/);
     assert.equal(companyTest.statusCode, 200);
@@ -69,6 +72,7 @@ async function run() {
 
     console.log("OK: local URL smoke test passed");
     console.table([
+      { url: `http://${host}:${port}/health`, status: health.statusCode },
       { url: `http://${host}:${port}/prototype/index.html`, status: index.statusCode },
       { url: `http://${host}:${port}/prototype/company-test.html`, status: companyTest.statusCode }
     ]);
