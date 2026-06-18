@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "updatedAt": "2026-06-18T00:00:00+09:00",
+  "records": {
+    "customers": [
+      {
+        "id": "customer_sample_001",
+        "company": "株式会社サンプル",
+        "person": "田中",
+        "email": "tanaka@example.invalid",
+        "sendable": true,
+        "ng_skills": [],
+        "ng_conditions": [],
+        "ng_words": [],
+        "max_age": null,
+        "max_commerce_level": null
+      }
+    ],
+    "requests": [
+      {
+        "id": "request_sample_001",
+        "subject": "Java/Spring Boot案件",
+        "required_skills": ["Java", "Spring Boot"],
+        "unit_max": 70,
+        "location": "東京",
+        "work_style": "週3リモート",
+        "status": "マッチング済み"
+      }
+    ],
+    "talents": [
+      {
+        "id": "talent_sample_001",
+        "code": "engineer_sample_001",
+        "skills": ["Java", "Spring Boot", "AWS"],
+        "unit": 68,
+        "location": "東京",
+        "work_style": "週3リモート可",
+        "status": "提案可"
+      }
+    ],
+    "matches": [
+      {
+        "id": "match_sample_001",
+        "request_id": "request_sample_001",
+        "talent_id": "talent_sample_001",
+        "score": 92,
+        "rank": "1位",
+        "cutoff": true
+      }
+    ],
+    "proposal_targets": [],
+    "send_histories": [],
+    "replies": [],
+    "interviews": [],
+    "deals": [],
+    "audit_events": []
+  }
+}
