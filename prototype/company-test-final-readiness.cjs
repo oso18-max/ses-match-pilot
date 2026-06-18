@@ -13,6 +13,7 @@ function has(text, pattern) {
 }
 
 const handoff = readText("COMPANY_TEST_HANDOFF.md");
+const packageGuide = readText("COMPANY_TEST_PACKAGE.md");
 const invite = readText("COMPANY_TEST_INVITE.md");
 const feedback = readText("COMPANY_TEST_FEEDBACK.md");
 const security = readText("SECURITY_REVIEW.md");
@@ -39,6 +40,11 @@ const checks = [
     item: "案内文",
     ok: has(invite, /SES Auto Send 企業テストのお願い/) && has(invite, /結果レポートを保存して共有する/),
     detail: "企業へ送るコピー文がある"
+  },
+  {
+    item: "配布パッケージ",
+    ok: has(packageGuide, /企業へ渡すもの/) && has(packageGuide, /PMが確認するコマンド/),
+    detail: "渡す資料と確認コマンドを1か所で見られる"
   },
   {
     item: "安全注意",
