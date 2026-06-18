@@ -16,17 +16,22 @@ const state = {
 単価: 70万
 勤務地: 東京
 稼働: 即日
-働き方: 週3リモート`,
+働き方: 週3リモート
+年齢: 45歳まで
+商流: 二次請まで
+NG: 外国籍`,
     talentText: `Javaバックエンドエンジニア
 スキル: Java, Spring Boot, PostgreSQL, AWS
 希望単価: 68万
 勤務地: 東京
 稼働: 即日
-働き方: 週3リモート可`,
-    customerCsv: `company,person,email,sendable,ngSkills,ngConditions
-株式会社アルファ,田中,tanaka@alpha.example.invalid,送信可,,
-ベータソリューションズ株式会社,採用担当,ses@beta.example.invalid,送信可,常駐のみ,単価70万円超NG
-株式会社ガンマ,佐藤,sato@gamma.example.invalid,停止,,`,
+働き方: 週3リモート可
+年齢: 42歳
+商流: 二次請`,
+    customerCsv: `company,person,email,sendable,ngSkills,ngConditions,ngWords,maxAge,maxCommerceLevel
+株式会社アルファ,田中,tanaka@alpha.example.invalid,送信可,,,,,
+ベータソリューションズ株式会社,採用担当,ses@beta.example.invalid,送信可,常駐のみ,単価70万円超NG,,45,2
+株式会社ガンマ,佐藤,sato@gamma.example.invalid,停止,,,,,`,
     result: null,
     history: [],
     feedbackText: "",
@@ -384,7 +389,7 @@ function applyCompanyTestPreset(key) {
 function clearCompanyTestInput() {
   state.companyTest.requestText = "";
   state.companyTest.talentText = "";
-  state.companyTest.customerCsv = "company,person,email,sendable,ngSkills,ngConditions\n";
+  state.companyTest.customerCsv = "company,person,email,sendable,ngSkills,ngConditions,ngWords,maxAge,maxCommerceLevel\n";
   state.companyTest.result = null;
   state.companyTest.feedbackText = "";
   state.companyTest.feedbackChecks = { score: false, exclusion: false, mail: false };
@@ -404,6 +409,51 @@ function extractKnownSkills(text) {
 function extractUnit(text, fallback) {
   const matched = String(text).match(/(\d{2,3})\s*万/);
   return matched ? Number(matched[1]) : fallback;
+}
+
+function extractAge(text) {
+  const matched = String(text).match(/(\d{2})\s*歳/);
+  return matched ? Number(matched[1]) : null;
+}
+
+function extractMaxAge(text) {
+  const source = String(text || "");
+  const strict = source.match(/(\d{2})\s*歳\s*(まで|以下|以内)/);
+  if (strict) return Number(strict[1]);
+  const labeled = source.match(/年齢\s*[:：]?\s*(\d{2})\s*歳/);
+  return labeled ? Number(labeled[1]) : null;
+}
+
+function extractCommerceLevel(text) {
+  const source = String(text || "");
+  if (source.includes("エンド直")) return 0;
+  if (source.includes("元請") || source.includes("一次請") || source.includes("1次請") || source.includes("一次")) return 1;
+  if (source.includes("二次請") || source.includes("2次請") || source.includes("二次")) return 2;
+  if (source.includes("三次請") || source.includes("3次請") || source.includes("三次")) return 3;
+  return null;
+}
+
+function commerceLabel(level) {
+  if (level === 0) return "エンド直";
+  if (level === 1) return "一次請";
+  if (level === 2) return "二次請";
+  if (level === 3) return "三次請";
+  return "不明";
+}
+
+function extractMaxCommerceLevel(text) {
+  const source = String(text || "");
+  if (!source.includes("商流")) return null;
+  return extractCommerceLevel(source);
+}
+
+function extractNgWords(text) {
+  return String(text || "")
+    .split(/\r?\n/)
+    .filter((line) => /NG|ＮＧ|不可/.test(line))
+    .flatMap((line) => line.replace(/.*?[:：]/, "").split(/[、,|;]/))
+    .map((item) => item.trim())
+    .filter((item) => item && !["なし", "無し", "無"].includes(item));
 }
 
 function extractLocation(text) {
@@ -427,32 +477,41 @@ function extractStart(text) {
 
 function parseCompanyTestRequest(text) {
   const skills = extractKnownSkills(text);
+  const sourceText = String(text || "");
   return {
     id: "company_test_req",
-    subject: String(text).split(/\r?\n/).find(Boolean) || "テスト案件",
+    subject: sourceText.split(/\r?\n/).find(Boolean) || "テスト案件",
+    sourceText,
     extracted: {
-      role: String(text).split(/\r?\n/).find(Boolean) || "テスト案件",
+      role: sourceText.split(/\r?\n/).find(Boolean) || "テスト案件",
       required: skills.length ? skills.slice(0, Math.min(skills.length, 3)) : ["Java"],
       nice: skills.slice(3),
       unitMax: extractUnit(text, 70),
       start: extractStart(text),
       location: extractLocation(text),
-      workStyle: extractWorkStyle(text)
+      workStyle: extractWorkStyle(text),
+      maxAge: extractMaxAge(text),
+      maxCommerceLevel: extractMaxCommerceLevel(text),
+      ngWords: extractNgWords(text)
     }
   };
 }
 
 function parseCompanyTestTalent(text) {
   const skills = extractKnownSkills(text);
+  const sourceText = String(text || "");
   return {
     id: "company_test_talent",
     code: "test_engineer_001",
-    role: String(text).split(/\r?\n/).find(Boolean) || "テスト人材",
+    role: sourceText.split(/\r?\n/).find(Boolean) || "テスト人材",
+    sourceText,
     skills: skills.length ? skills : ["Java"],
     unit: extractUnit(text, 70),
     available: extractStart(text),
     location: extractLocation(text),
-    workStyle: extractWorkStyle(text)
+    workStyle: extractWorkStyle(text),
+    age: extractAge(text),
+    commerceLevel: extractCommerceLevel(text)
   };
 }
 
@@ -495,6 +554,15 @@ function companyTestCsvHeaders(csvText) {
   return parseCompanyTestCsvRows(csvText)[0]?.map((item) => item.trim()) || [];
 }
 
+function splitCsvList(value) {
+  return String(value || "").split(/[|;]/).map((item) => item.trim()).filter(Boolean);
+}
+
+function parseOptionalNumber(value) {
+  const matched = String(value || "").match(/\d+/);
+  return matched ? Number(matched[0]) : null;
+}
+
 function parseCompanyTestCustomers(csvText) {
   const rows = parseCompanyTestCsvRows(csvText);
   const headers = rows.shift()?.map((item) => item.trim()) || [];
@@ -508,8 +576,11 @@ function parseCompanyTestCustomers(csvText) {
       honorific: "様",
       email: row.email || `test${index + 1}@example.invalid`,
       sendable: !["false", "停止", "不可", "ng"].includes(String(row.sendable || "").toLowerCase()),
-      ngSkills: String(row.ngSkills || "").split(/[|;]/).map((item) => item.trim()).filter(Boolean),
-      ngConditions: String(row.ngConditions || "").split(/[|;]/).map((item) => item.trim()).filter(Boolean),
+      ngSkills: splitCsvList(row.ngSkills),
+      ngConditions: splitCsvList(row.ngConditions),
+      ngWords: splitCsvList(row.ngWords),
+      maxAge: parseOptionalNumber(row.maxAge),
+      maxCommerceLevel: parseOptionalNumber(row.maxCommerceLevel),
       templateGroup: "標準"
     };
   });
@@ -591,14 +662,19 @@ function score(request, talent) {
   const unitOk = talent.unit <= req.unitMax;
   const startOk = talent.available === req.start || req.start === "即日" && talent.available === "即日";
   const locationOk = req.workStyle.includes("リモート") || talent.location === req.location || talent.workStyle.includes("リモート");
-  const cutoff = matchedRequired.length >= Math.ceil(req.required.length * 0.7) && unitOk && locationOk;
+  const ageOk = !req.maxAge || !talent.age || talent.age <= req.maxAge;
+  const commerceOk = req.maxCommerceLevel == null || talent.commerceLevel == null || talent.commerceLevel <= req.maxCommerceLevel;
+  const requestNgHits = (req.ngWords || []).filter((word) => normalize(talent.sourceText).includes(normalize(word)));
+  const ngWordsOk = requestNgHits.length === 0;
+  const eligibilityOk = ageOk && commerceOk && ngWordsOk;
+  const cutoff = matchedRequired.length >= Math.ceil(req.required.length * 0.7) && unitOk && locationOk && eligibilityOk;
   const scoreValue = cutoff
     ? Math.round((matchedRequired.length / req.required.length) * 40)
       + Math.round((matchedNice.length / Math.max(req.nice.length, 1)) * 15)
       + (startOk ? 15 : 8)
       + (unitOk ? 15 : 0)
       + (locationOk ? 15 : 0)
-    : Math.min(39, matchedRequired.length * 12 + (unitOk ? 5 : 0));
+    : Math.min(39, matchedRequired.length * 12 + (unitOk ? 5 : 0) + (eligibilityOk ? 0 : -10));
   let rank = "除外";
   if (cutoff && scoreValue >= 80) rank = "1位";
   else if (cutoff && scoreValue >= 65) rank = "2位";
@@ -616,7 +692,10 @@ function score(request, talent) {
       matchedRequired.length ? `必須一致: ${matchedRequired.join(" / ")}` : "必須一致なし",
       matchedNice.length ? `尚可一致: ${matchedNice.join(" / ")}` : "尚可一致なし",
       unitOk ? "単価OK" : "単価NG",
-      locationOk ? "勤務地/リモートOK" : "勤務地NG"
+      locationOk ? "勤務地/リモートOK" : "勤務地NG",
+      ageOk ? "年齢OK" : `年齢NG: ${talent.age}歳 / 上限${req.maxAge}歳`,
+      commerceOk ? "商流OK" : `商流NG: ${commerceLabel(talent.commerceLevel)} / 上限${commerceLabel(req.maxCommerceLevel)}`,
+      ngWordsOk ? "NGワードなし" : `NGワード: ${requestNgHits.join(" / ")}`
     ],
     warning: missing.length ? `不足: ${missing.join(" / ")}` : "大きな不足なし"
   };
@@ -628,12 +707,34 @@ function rankedMatches(request = selectedRequest()) {
     .sort((a, b) => b.score - a.score);
 }
 
+function customerBlockedReasons(customer, request, talent) {
+  const blocked = [];
+  const ngSkills = customer.ngSkills || [];
+  const ngConditions = customer.ngConditions || [];
+  const ngWords = customer.ngWords || [];
+  const combinedText = `${request.subject || ""}\n${request.sourceText || ""}\n${talent.role || ""}\n${talent.sourceText || ""}\n${talent.skills.join(" ")}`;
+
+  if (!customer.sendable) blocked.push("送信停止");
+  if (ngSkills.some((ng) => talent.skills.includes(ng) || request.extracted.workStyle.includes(ng) || talent.workStyle.includes(ng))) blocked.push("NG条件");
+  if (ngConditions.includes("単価70万円超NG") && talent.unit > 70) blocked.push("単価NG");
+  if (customer.maxAge && talent.age && talent.age > customer.maxAge) blocked.push("年齢NG");
+  if (customer.maxCommerceLevel !== null && customer.maxCommerceLevel !== undefined && talent.commerceLevel !== null && talent.commerceLevel > customer.maxCommerceLevel) blocked.push("商流NG");
+  if (ngWords.some((word) => normalize(combinedText).includes(normalize(word)))) blocked.push("NGワード");
+
+  ngConditions.forEach((condition) => {
+    const conditionMaxAge = condition.includes("年齢") ? parseOptionalNumber(condition) : null;
+    const conditionMaxFlow = condition.includes("商流") ? extractCommerceLevel(condition) : null;
+    if (conditionMaxAge && talent.age && talent.age > conditionMaxAge) blocked.push("年齢NG");
+    if (conditionMaxFlow !== null && talent.commerceLevel !== null && talent.commerceLevel > conditionMaxFlow) blocked.push("商流NG");
+    if (condition.includes("外国籍") && normalize(combinedText).includes("外国籍")) blocked.push("NGワード");
+  });
+
+  return [...new Set(blocked)];
+}
+
 function sendTargets(request = selectedRequest(), talent = selectedTalent()) {
   return customers.map((customer) => {
-    const blocked = [];
-    if (!customer.sendable) blocked.push("送信停止");
-    if (customer.ngSkills.some((ng) => talent.skills.includes(ng) || request.extracted.workStyle.includes(ng))) blocked.push("NG条件");
-    if (customer.ngConditions.includes("単価70万円超NG") && talent.unit > 70) blocked.push("単価NG");
+    const blocked = customerBlockedReasons(customer, request, talent);
     return {
       ...customer,
       blocked,
@@ -829,10 +930,7 @@ function clearCompanyTestHistory() {
 
 function sendTargetsForCompanyTest(request, talent, targetCustomers) {
   return targetCustomers.map((customer) => {
-    const blocked = [];
-    if (!customer.sendable) blocked.push("送信停止");
-    if (customer.ngSkills.some((ng) => talent.skills.includes(ng) || request.extracted.workStyle.includes(ng))) blocked.push("NG条件");
-    if (customer.ngConditions.includes("単価70万円超NG") && talent.unit > 70) blocked.push("単価NG");
+    const blocked = customerBlockedReasons(customer, request, talent);
     return {
       ...customer,
       blocked,
@@ -951,10 +1049,10 @@ function companyTestFeedbackStatus() {
 
 function companyTestCsvTemplate() {
   return [
-    "company,person,email,sendable,ngSkills,ngConditions",
-    "株式会社サンプル,田中,tanaka@example.invalid,送信可,,",
-    "株式会社停止先,佐藤,sato@example.invalid,停止,,",
-    "株式会社NG先,鈴木,suzuki@example.invalid,送信可,常駐のみ,単価70万円超NG"
+    "company,person,email,sendable,ngSkills,ngConditions,ngWords,maxAge,maxCommerceLevel",
+    "株式会社サンプル,田中,tanaka@example.invalid,送信可,,,,,",
+    "株式会社停止先,佐藤,sato@example.invalid,停止,,,,,",
+    "株式会社NG先,鈴木,suzuki@example.invalid,送信可,常駐のみ,単価70万円超NG,外国籍,45,2"
   ].join("\n");
 }
 
@@ -1479,7 +1577,7 @@ function renderCompanyTest() {
         </div>
         <div class="guide-card">
           <strong>送信先CSV</strong>
-          <span>列は company, person, email, sendable, ngSkills, ngConditions です。</span>
+          <span>必須列は company, person, email, sendable。任意で ngSkills, ngConditions, ngWords, maxAge, maxCommerceLevel も使えます。</span>
           <button class="small-action" onclick="copyCompanyTestCsvTemplate()">CSVテンプレをコピー</button>
         </div>
       </div>
@@ -1800,6 +1898,8 @@ if (typeof module !== "undefined") {
     clearCompanyTestInput,
     clearCompanyTestHistory,
     addCompanyTestHistory,
+    customerBlockedReasons,
+    sendTargetsForCompanyTest,
     parseCompanyTestRequest,
     parseCompanyTestTalent,
     parseCompanyTestCsvRows,
