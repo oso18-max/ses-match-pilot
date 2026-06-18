@@ -35,8 +35,11 @@ assert.match(appSource, /候補人材ランキング/);
 assert.match(appSource, /人材ごとに --- で区切る/);
 assert.match(appSource, /提案候補の最低点/);
 assert.match(appSource, /表示する上位人材数/);
-assert.match(appSource, /React案件/);
-assert.match(appSource, /Python案件/);
+assert.match(appSource, /提案候補を見る/);
+assert.match(appSource, /除外理由を見る/);
+assert.match(appSource, /複数人材ランキング/);
+assert.match(appSource, /React管理画面案件/);
+assert.match(appSource, /Pythonバッチ改修案件/);
 assert.match(appSource, /80点以上/);
 assert.match(appSource, /59点以下/);
 

@@ -121,6 +121,53 @@ const companyTestPresets = {
 稼働: 来月
 働き方: 常駐可`,
     customerCsv: companyTestSample.customerCsv
+  },
+  blocked: {
+    requestText: `Java保守案件
+必須: Java
+単価: 65万
+勤務地: 東京
+稼働: 即日
+年齢: 45歳まで
+商流: 二次請まで
+NG: 外国籍`,
+    talentText: `Javaエンジニア
+スキル: Java, SQL
+希望単価: 70万
+勤務地: 神奈川
+稼働: 来月
+年齢: 50歳
+商流: 三次請
+外国籍`,
+    customerCsv: `company,person,email,sendable,ngConditions,ngWords,maxAge,maxCommerceLevel
+Sample NG A,高橋,takahashi@example.invalid,送信可,70万以上NG,外国籍,45,2
+Sample Stop B,伊藤,ito@example.invalid,停止,,,45,2`
+  },
+  ranking: {
+    requestText: `React TypeScript案件
+必須: React, TypeScript
+尚可: Next.js, Node.js
+単価: 75万
+勤務地: フルリモート
+稼働: 即日`,
+    talentText: `Reactエンジニア
+スキル: React, TypeScript, Next.js
+希望単価: 72万
+勤務地: フルリモート
+稼働: 即日
+---
+Pythonエンジニア
+スキル: Python, Django, AWS
+希望単価: 70万
+勤務地: 東京
+稼働: 即日
+---
+フロントエンドエンジニア
+スキル: React, JavaScript, CSS
+希望単価: 68万
+勤務地: リモート
+稼働: 来月`,
+    customerCsv: companyTestSample.customerCsv
   }
 };
 
@@ -2310,8 +2357,10 @@ function renderCompanyTest() {
       </section>
       <div class="toolbar">
         <span class="muted">サンプル切替</span>
+        <button class="ghost-action" onclick="applyCompanyTestPreset('react')">提案候補を見る</button>
+        <button class="ghost-action" onclick="applyCompanyTestPreset('blocked')">除外理由を見る</button>
+        <button class="ghost-action" onclick="applyCompanyTestPreset('ranking')">複数人材ランキング</button>
         <button class="ghost-action" onclick="applyCompanyTestPreset('java')">Java案件</button>
-        <button class="ghost-action" onclick="applyCompanyTestPreset('react')">React案件</button>
         <button class="ghost-action" onclick="applyCompanyTestPreset('python')">Python案件</button>
       </div>
       <div class="guide-grid">
