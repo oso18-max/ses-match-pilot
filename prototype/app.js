@@ -755,6 +755,36 @@ function companyTestReport(result) {
   ].join("\n");
 }
 
+function companyTestVerdict(result) {
+  if (!result) {
+    return {
+      label: "未実行",
+      detail: "案件、人材、送信先CSVを入力してマッチング実行してください。",
+      type: ""
+    };
+  }
+  const sendableTargets = result.targets.filter((target) => target.canSend);
+  if (result.match.score >= 80 && sendableTargets.length > 0) {
+    return {
+      label: "テスト提案可能",
+      detail: "マッチング点数と送信可能企業があります。提案メールプレビューを確認してください。",
+      type: "ok"
+    };
+  }
+  if (result.match.score >= 60) {
+    return {
+      label: "要確認",
+      detail: "条件は一部合っています。除外理由と不足条件を確認してください。",
+      type: "warn"
+    };
+  }
+  return {
+    label: "提案見送り",
+    detail: "スキル、単価、勤務地などの条件差が大きい可能性があります。",
+    type: "bad"
+  };
+}
+
 function companyTestCsvTemplate() {
   return [
     "company,person,email,sendable,ngSkills,ngConditions",
@@ -1189,6 +1219,7 @@ function renderCompanyTest() {
   const sendableTargets = result ? result.targets.filter((target) => target.canSend) : [];
   const blockedTargets = result ? result.targets.filter((target) => !target.canSend) : [];
   const firstTarget = sendableTargets[0] || result?.targets[0];
+  const verdict = companyTestVerdict(result);
 
   return `
     <section class="panel">
@@ -1257,6 +1288,13 @@ function renderCompanyTest() {
     </section>
 
     ${result ? `
+      <section class="panel verdict-panel ${verdict.type}">
+        <div>
+          <h2>${verdict.label}</h2>
+          <p class="muted">${verdict.detail}</p>
+        </div>
+        <div class="verdict-score">${result.match.score}<span>点</span></div>
+      </section>
       <div class="metrics">
         <div class="metric is-accent"><span>マッチング点数</span><strong>${result.match.score}</strong><small>${result.match.rank}</small></div>
         <div class="metric is-success"><span>送信可能</span><strong>${sendableTargets.length}</strong><small>個別送信候補</small></div>
@@ -1475,6 +1513,7 @@ if (typeof module !== "undefined") {
     parseCompanyTestCustomers,
     validateCompanyTestInput,
     companyTestReport,
+    companyTestVerdict,
     copyCompanyTestReport,
     companyTestCsvTemplate,
     copyCompanyTestCsvTemplate,

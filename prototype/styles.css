@@ -498,6 +498,42 @@ textarea {
   background: #f8fafc;
 }
 
+.verdict-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.verdict-panel.ok {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.verdict-panel.warn {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.verdict-panel.bad {
+  border-color: #fecaca;
+  background: #fff7f7;
+}
+
+.verdict-score {
+  min-width: 88px;
+  text-align: right;
+  color: var(--primary);
+  font-size: 42px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.verdict-score span {
+  margin-left: 2px;
+  font-size: 15px;
+}
+
 .toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -666,5 +702,7 @@ tr:last-child td { border-bottom: 0; }
   .handoff-banner,
   .guide-grid,
   .form-grid { grid-template-columns: 1fr; }
+  .verdict-panel { align-items: flex-start; flex-direction: column; }
+  .verdict-score { text-align: left; }
   .action-card { grid-template-columns: 1fr; }
 }
