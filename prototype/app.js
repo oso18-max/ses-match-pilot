@@ -192,7 +192,13 @@ const incomingRequests = [
       workStyle: "週3リモート"
     },
     validUntil: "2026-06-24",
-    status: "マッチング済み"
+    status: "マッチング済み",
+    classification: {
+      type: "案件",
+      confidence: 95,
+      sourceSummary: "件名 / 本文 / 添付本文",
+      reason: "案件語: 急募 / 案件 / 単価 / リモート"
+    }
   },
   {
     id: "req_002",
@@ -212,7 +218,13 @@ const incomingRequests = [
       workStyle: "フルリモート"
     },
     validUntil: "2026-06-24",
-    status: "マッチング済み"
+    status: "マッチング済み",
+    classification: {
+      type: "案件",
+      confidence: 92,
+      sourceSummary: "件名 / 本文",
+      reason: "案件語: React / フルリモート / 開始"
+    }
   },
   {
     id: "req_003",
@@ -232,7 +244,36 @@ const incomingRequests = [
       workStyle: "常駐"
     },
     validUntil: "2026-06-24",
-    status: "確認必要"
+    status: "確認必要",
+    classification: {
+      type: "案件",
+      confidence: 58,
+      sourceSummary: "件名 / 添付本文",
+      reason: "低信頼度: 添付PDFから一部抽出 / 単価差あり"
+    }
+  }
+];
+
+const mailReviewItems = [
+  {
+    id: "mail_review_001",
+    receivedAt: "2026-06-17 12:05",
+    fromAddress: "unknown@example.invalid",
+    subject: "ご相談",
+    type: "判定不能",
+    confidence: 8,
+    sourceSummary: "本文",
+    reason: "案件語が単価のみ。案件か雑談か判断できない"
+  },
+  {
+    id: "mail_review_002",
+    receivedAt: "2026-06-17 12:20",
+    fromAddress: "scan@example.invalid",
+    subject: "資料送付",
+    type: "判定不能",
+    confidence: 0,
+    sourceSummary: "情報なし",
+    reason: "スキャンPDF想定。本文抽出できない"
   }
 ];
 
@@ -839,11 +880,21 @@ function dealForInterview(interviewId) {
   return deals.find((item) => item.interviewId === interviewId);
 }
 
+function mailReviewSummary() {
+  const lowConfidenceRequests = incomingRequests.filter((request) => (request.classification?.confidence || 100) < 60);
+  return {
+    lowConfidenceRequests,
+    reviewItems: mailReviewItems,
+    total: lowConfidenceRequests.length + mailReviewItems.length
+  };
+}
+
 function sharedLedgerSummary() {
   const batches = matchBatches();
   const proposals = unsentProposals(batches);
+  const reviews = mailReviewSummary();
   return [
-    { label: "案件メール", count: incomingRequests.length, status: "取込済み", view: "inbox" },
+    { label: "案件メール", count: incomingRequests.length, status: `確認待ち${reviews.total}件`, view: "inbox" },
     { label: "登録スキルシート", count: skillSheets.length, status: "提案可", view: "sheets" },
     { label: "送信先", count: customers.length, status: `停止${customers.filter((customer) => !customer.sendable).length}件`, view: "customers" },
     { label: "マッチング候補", count: batches.reduce((sum, batch) => sum + batch.sendable.length, 0), status: `${state.sendThreshold}点以上`, view: "matches" },
@@ -1574,16 +1625,47 @@ function renderRequestCards(list) {
 }
 
 function renderInbox() {
+  const reviews = mailReviewSummary();
   return `
+    <section class="panel">
+      <div class="toolbar">
+        <h2>確認待ちメール</h2>
+        <span class="muted">低信頼度・判定不能のメールだけを確認します。外部送信はしません。</span>
+      </div>
+      ${reviews.total ? table(
+        ["受信", "件名", "分類", "信頼度", "検出場所/理由"],
+        [
+          ...reviews.lowConfidenceRequests.map((request) => `
+            <tr>
+              <td>${request.receivedAt}<br><span class="muted">${request.fromAddress}</span></td>
+              <td><strong>${request.subject}</strong><br><span class="muted">${request.attachment}</span></td>
+              <td><span class="status warn">${request.classification.type}</span></td>
+              <td><strong>${request.classification.confidence}</strong><br><span class="muted">要確認</span></td>
+              <td>${escapeHtml(request.classification.sourceSummary)}<br><span class="muted">${escapeHtml(request.classification.reason)}</span></td>
+            </tr>
+          `),
+          ...reviews.reviewItems.map((item) => `
+            <tr>
+              <td>${item.receivedAt}<br><span class="muted">${item.fromAddress}</span></td>
+              <td><strong>${item.subject}</strong><br><span class="muted">${item.id}</span></td>
+              <td><span class="status bad">${item.type}</span></td>
+              <td><strong>${item.confidence}</strong><br><span class="muted">保留</span></td>
+              <td>${escapeHtml(item.sourceSummary)}<br><span class="muted">${escapeHtml(item.reason)}</span></td>
+            </tr>
+          `)
+        ]
+      ) : `<p class="muted">確認待ちメールはありません。</p>`}
+    </section>
     <section class="panel">
       <h2>案件メール</h2>
       ${table(
-        ["受信", "件名/添付", "抽出条件", "状態", "操作"],
+        ["受信", "件名/添付", "抽出条件", "分類", "状態", "操作"],
         incomingRequests.filter(matchesQuery).map((request) => `
           <tr>
             <td>${request.receivedAt}<br><span class="muted">${request.fromAddress}</span></td>
             <td><strong>${request.subject}</strong><br>${request.attachment} / ${request.fileType}</td>
             <td>${request.extracted.required.join(" / ")}<br>${request.extracted.location} / ${request.extracted.workStyle} / ${request.extracted.unitMax}万円</td>
+            <td>${request.classification ? `${request.classification.type}<br><span class="muted">${request.classification.confidence} / ${request.classification.sourceSummary}</span>` : "-"}</td>
             <td><span class="status ${request.status === "確認必要" ? "warn" : "ok"}">${request.status}</span><br><span class="muted">有効期限: ${request.validUntil}</span></td>
             <td><button class="small-action" onclick="setRequest('${request.id}'); setView('matches')">マッチング</button></td>
           </tr>

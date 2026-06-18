@@ -7,6 +7,9 @@ const cssSource = fs.readFileSync(path.join(__dirname, "styles.css"), "utf8");
 
 assert.match(appSource, /showUnsentQueue: true/);
 assert.match(appSource, /未送信一覧/);
+assert.match(appSource, /確認待ちメール/);
+assert.match(appSource, /低信頼度・判定不能/);
+assert.match(appSource, /function mailReviewSummary/);
 assert.match(appSource, /テスト表示です。外部送信はしません/);
 assert.match(appSource, /テスト送信済みにする/);
 assert.match(appSource, /function matchBreakdown/);

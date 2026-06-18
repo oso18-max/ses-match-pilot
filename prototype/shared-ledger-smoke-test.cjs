@@ -34,6 +34,7 @@ assert.equal(ledger.skipped[0].queueId, "send_queue_002");
 assert.equal(ledger.confirmations.some((item) => item.kind === "reply_review"), true);
 assert.equal(confirmationItems(result).length >= ledger.confirmations.length, true);
 assert.equal(app.sharedLedgerSummary().some((item) => item.label === "成約管理" && item.count === app.deals.length), true);
+assert.equal(app.sharedLedgerSummary().some((item) => item.label === "案件メール" && item.status.includes("確認待ち")), true);
 assert.equal(app.sharedLedgerSummary().some((item) => item.label === "共有台帳サマリー"), false);
 
 console.log("OK: shared ledger smoke test passed");
