@@ -64,6 +64,7 @@ function summarize(filePath) {
   return {
     file: path.basename(filePath),
     mails: result.scenario.classifications.length,
+    lowConfidenceMails: result.scenario.classifications.filter((item) => item.confidence < 60).length,
     requests: result.scenario.requests.length,
     talents: result.scenario.talents.length,
     customers: result.scenario.customers.length,

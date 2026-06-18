@@ -46,6 +46,10 @@ function includesAny(text, signals) {
   return signals.filter((signal) => text.includes(signal));
 }
 
+function unique(list) {
+  return [...new Set(list)];
+}
+
 function textParts(mail) {
   const attachmentTexts = (mail.attachments || []).map((attachment) => attachment.text || "").filter(Boolean);
   const attachmentNames = (mail.attachments || []).map((attachment) => attachment.filename || "").filter(Boolean);
@@ -67,6 +71,35 @@ function detectLocation(parts) {
   return "情報なし";
 }
 
+function signalBreakdown(parts) {
+  const areas = [
+    { key: "件名", text: parts.subject },
+    { key: "本文", text: parts.body },
+    { key: "添付名", text: parts.attachmentName },
+    { key: "添付本文", text: parts.attachmentText }
+  ];
+  return areas.map((area) => ({
+    area: area.key,
+    requestHits: includesAny(area.text, requestSignals),
+    talentHits: includesAny(area.text, talentSignals),
+    otherHits: includesAny(area.text, otherSignals)
+  }));
+}
+
+function hitAreas(breakdown) {
+  return breakdown
+    .filter((item) => item.requestHits.length || item.talentHits.length || item.otherHits.length)
+    .map((item) => item.area);
+}
+
+function confidenceFor(type, requestHits, talentHits, otherHits, location) {
+  if (type === "複合") return Math.min(95, 70 + requestHits.length * 3 + talentHits.length * 3);
+  if (type === "案件") return Math.min(95, 55 + requestHits.length * 7 + (location.includes("添付") ? 5 : 0));
+  if (type === "人材") return Math.min(95, 55 + talentHits.length * 7 + (location.includes("添付") ? 5 : 0));
+  if (type === "その他") return Math.min(80, 45 + otherHits.length * 8);
+  return Math.min(40, (requestHits.length + talentHits.length + otherHits.length) * 8);
+}
+
 function classifyMail(mail) {
   const parts = textParts(mail);
   const bodyText = `${parts.subject}\n${parts.body}`;
@@ -77,6 +110,8 @@ function classifyMail(mail) {
   const talentHits = includesAny(allText, talentSignals);
   const otherHits = includesAny(allText, otherSignals);
   const location = detectLocation(parts);
+  const breakdown = signalBreakdown(parts);
+  const areas = hitAreas(breakdown);
 
   let type = "判定不能";
   if (requestHits.length >= 3 && talentHits.length >= 3) type = "複合";
@@ -89,6 +124,7 @@ function classifyMail(mail) {
   if (requestHits.length) reasons.push(`案件語: ${requestHits.join(" / ")}`);
   if (talentHits.length) reasons.push(`人材語: ${talentHits.join(" / ")}`);
   if (otherHits.length) reasons.push(`その他語: ${otherHits.join(" / ")}`);
+  if (areas.length) reasons.push(`検出場所: ${areas.join(" / ")}`);
   if (!reasons.length) reasons.push("分類できる語句が不足");
 
   return {
@@ -96,6 +132,11 @@ function classifyMail(mail) {
     subject: mail.subject,
     type,
     location,
+    confidence: confidenceFor(type, unique(requestHits), unique(talentHits), unique(otherHits), location),
+    sourceSummary: areas.join(" / ") || "情報なし",
+    requestHitCount: unique(requestHits).length,
+    talentHitCount: unique(talentHits).length,
+    otherHitCount: unique(otherHits).length,
     reasons: reasons.join(" | ")
   };
 }
@@ -112,5 +153,6 @@ if (require.main === module) run();
 module.exports = {
   classifyMail,
   detectLocation,
+  signalBreakdown,
   textParts
 };

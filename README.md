@@ -124,3 +124,11 @@ http://127.0.0.1:4173/prototype/company-test.html
 ```powershell
 node prototype\run-all-smoke-tests.cjs
 ```
+
+メール取込の品質確認:
+
+```powershell
+node prototype\pipeline-quality-report.cjs
+```
+
+分類結果には、案件/人材/その他の判定、検出場所、信頼度、低信頼度メール数が出ます。

@@ -273,6 +273,8 @@ function run() {
     id: item.id,
     type: item.type,
     location: item.location,
+    confidence: item.confidence,
+    source: item.sourceSummary,
     subject: item.subject
   })));
   console.log(`未送信候補: ${sendableRows.length}件`);

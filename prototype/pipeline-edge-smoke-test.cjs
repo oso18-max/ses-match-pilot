@@ -15,6 +15,9 @@ assert.equal(result.scenario.pending.length, 3);
 assert.equal(result.sendableRows.length, 2);
 assert.equal(result.drafts.length, 2);
 assert.equal(result.history.length, 2);
+assert.equal(result.scenario.classifications.every((item) => typeof item.confidence === "number"), true);
+assert.equal(result.scenario.classifications.some((item) => item.sourceSummary.includes("添付本文")), true);
+assert.equal(result.scenario.classifications.some((item) => item.reasons.includes("検出場所")), true);
 
 const pendingIds = result.scenario.pending.map((item) => item.id);
 assert.deepEqual(pendingIds, ["edge_003", "edge_004", "edge_006"]);
@@ -24,6 +27,8 @@ console.table(result.scenario.classifications.map((item) => ({
   id: item.id,
   type: item.type,
   location: item.location,
+  confidence: item.confidence,
+  source: item.sourceSummary,
   subject: item.subject
 })));
 console.table(result.sendableRows.map((row) => ({

@@ -7,6 +7,7 @@ const edge = summarize(path.join(__dirname, "sample-mail-edge-cases.json"));
 
 assert.equal(normal.file, "sample-mail-inbox.json");
 assert.equal(normal.mails, 6);
+assert.equal(normal.lowConfidenceMails >= 1, true);
 assert.equal(normal.customers, 4);
 assert.equal(normal.customerImported, 4);
 assert.equal(normal.customerExcluded, 1);
@@ -22,6 +23,7 @@ assert.equal(normal.categoryCounts["抽出不足"], 3);
 
 assert.equal(edge.file, "sample-mail-edge-cases.json");
 assert.equal(edge.mails, 6);
+assert.equal(edge.lowConfidenceMails >= 2, true);
 assert.equal(edge.customers, 4);
 assert.equal(edge.customerImported, 4);
 assert.equal(edge.customerExcluded, 1);
