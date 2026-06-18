@@ -1569,6 +1569,33 @@ function companyTestReadinessItems() {
   ];
 }
 
+function companyTestInviteMessage(url = "http://127.0.0.1:4173/prototype/company-test.html") {
+  return [
+    "SES Auto Send 企業テストのお願い",
+    "",
+    "以下のURLから、案件・人材マッチングのテスト確認をお願いします。",
+    url,
+    "",
+    "確認してほしいこと:",
+    "1. 案件情報、人材情報、送信先CSVを貼り付ける",
+    "2. マッチング実行を押す",
+    "3. 点数、送信可能企業、除外理由、提案メール文面を見る",
+    "4. 違和感があればコメント欄に記入する",
+    "5. 結果レポートを保存して共有する",
+    "",
+    "注意:",
+    "- 実メール本文、実スキルシート本文、個人情報は入れないでください",
+    "- テスト用のダミーまたは匿名化した内容だけで確認してください",
+    "- この画面から実メール送信、Gmail連携、外部API接続は行いません",
+    "",
+    "回収したいもの:",
+    "- 点数の納得感",
+    "- 除外理由の違和感",
+    "- 提案メール文面の違和感",
+    "- 追加したいNG条件やマッチング条件"
+  ].join("\n");
+}
+
 function companyTestCsvTemplate() {
   return [
     "company,person,email,sendable,ngSkills,ngConditions,ngWords,maxAge,maxCommerceLevel",
@@ -1581,6 +1608,11 @@ function companyTestCsvTemplate() {
 function copyCompanyTestCsvTemplate() {
   if (typeof navigator === "undefined" || !navigator.clipboard) return;
   navigator.clipboard.writeText(companyTestCsvTemplate());
+}
+
+function copyCompanyTestInviteMessage() {
+  if (typeof navigator === "undefined" || !navigator.clipboard) return;
+  navigator.clipboard.writeText(companyTestInviteMessage());
 }
 
 function copyCompanyTestReport() {
@@ -2260,7 +2292,10 @@ function renderCompanyTest() {
       <section class="handoff-check-panel">
         <div class="toolbar">
           <h2>渡す前チェック</h2>
-          <span class="muted">企業に触ってもらう前に、この4点だけ確認します。</span>
+          <div class="top-actions">
+            <button class="ghost-action" onclick="copyCompanyTestInviteMessage()">案内文コピー</button>
+            <span class="muted">企業に触ってもらう前に、この4点だけ確認します。</span>
+          </div>
         </div>
         ${table(
           ["項目", "状態", "確認内容"],
@@ -2708,6 +2743,8 @@ if (typeof module !== "undefined") {
     companyTestBlockedSummary,
     companyTestFeedbackStatus,
     companyTestReadinessItems,
+    companyTestInviteMessage,
+    copyCompanyTestInviteMessage,
     copyCompanyTestReport,
     companyTestCsvTemplate,
     copyCompanyTestCsvTemplate,
