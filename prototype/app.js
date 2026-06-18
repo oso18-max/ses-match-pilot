@@ -858,6 +858,17 @@ function companyTestScoreRows(result) {
   ];
 }
 
+function companyTestBlockedSummary(result) {
+  if (!result) return [];
+  const summary = result.targets
+    .flatMap((target) => target.blocked || [])
+    .reduce((acc, reason) => {
+      acc[reason] = (acc[reason] || 0) + 1;
+      return acc;
+    }, {});
+  return Object.entries(summary).map(([reason, count]) => ({ reason, count }));
+}
+
 function companyTestCsvTemplate() {
   return [
     "company,person,email,sendable,ngSkills,ngConditions",
@@ -1423,6 +1434,20 @@ function renderCompanyTest() {
           )}
         </section>
       </div>
+      ${blockedTargets.length ? `
+        <section class="panel">
+          <h2>除外理由サマリー</h2>
+          ${table(
+            ["理由", "件数"],
+            companyTestBlockedSummary(result).map((row) => `
+              <tr>
+                <td>${escapeHtml(row.reason)}</td>
+                <td>${row.count}件</td>
+              </tr>
+            `)
+          )}
+        </section>
+      ` : ""}
       <div class="grid-2">
         <section class="detail-panel">
           <h2>提案メールプレビュー</h2>
@@ -1624,6 +1649,7 @@ if (typeof module !== "undefined") {
     companyTestReport,
     companyTestVerdict,
     companyTestScoreRows,
+    companyTestBlockedSummary,
     copyCompanyTestReport,
     companyTestCsvTemplate,
     copyCompanyTestCsvTemplate,
