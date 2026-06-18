@@ -20,6 +20,8 @@ assert.match(appSource, /このテストで確認できること/);
 assert.match(appSource, /メール送信、Gmail連携、外部API接続、実データ保存は行いません/);
 assert.match(appSource, /会社名、担当者名、メールアドレス、送信可否/);
 assert.match(appSource, /読み取り結果/);
+assert.match(appSource, /候補人材ランキング/);
+assert.match(appSource, /人材ごとに --- で区切る/);
 assert.match(appSource, /React案件/);
 assert.match(appSource, /Python案件/);
 assert.match(appSource, /80点以上/);
@@ -27,6 +29,7 @@ assert.match(appSource, /59点以下/);
 
 const request = app.parseCompanyTestRequest("Java Spring Boot案件\n単価: 70万\n勤務地: 東京\n稼働: 即日\n働き方: 週3リモート");
 const talent = app.parseCompanyTestTalent("Javaエンジニア\nJava Spring Boot PostgreSQL AWS\n希望単価: 68万\n勤務地: 東京\n稼働: 即日");
+const talentEntries = app.parseCompanyTestTalentEntries("Javaエンジニア\nJava Spring Boot\n---\nReactエンジニア\nReact TypeScript");
 const customers = app.parseCompanyTestCustomers("company,person,email,sendable,ngSkills,ngConditions\nA社,田中,a@example.invalid,送信可,,\nB社,佐藤,b@example.invalid,停止,,");
 const japaneseHeaderCustomers = app.parseCompanyTestCustomers("会社名,担当者名,メールアドレス,送信可否,NG条件,年齢上限,商流上限\n日本語ヘッダー社,山田,yamada@example.invalid,送信可,単価70万円超NG,45,2");
 const match = app.score(request, talent);
@@ -54,6 +57,9 @@ const report = app.companyTestReport({
 
 assert.equal(request.extracted.required.includes("Java"), true);
 assert.equal(talent.skills.includes("Spring Boot"), true);
+assert.equal(talentEntries.length, 2);
+assert.equal(talentEntries[0].code, "test_engineer_001");
+assert.equal(talentEntries[1].skills.includes("React"), true);
 assert.equal(customers.length, 2);
 assert.equal(customers[0].sendable, true);
 assert.equal(customers[1].sendable, false);
@@ -82,6 +88,8 @@ assert.equal(app.companyTestScoreRows({ match: restrictedMatch }).some((row) => 
 assert.equal(app.companyTestScoreRows({ match: restrictedMatch }).some((row) => row.item === "NGワード" && row.status === "要確認"), true);
 assert.deepEqual(app.companyTestBlockedSummary({ targets: [{ blocked: ["送信停止"] }, { blocked: ["送信停止"] }] }), [{ reason: "送信停止", count: 2 }]);
 assert.match(report, /マッチング点数/);
+assert.match(report, /判定人材数/);
+assert.match(report, /候補人材ランキング/);
 assert.match(report, /送信可能: 1件/);
 assert.match(report, /score ok/);
 assert.equal(app.companyTestFeedbackStatus().ready, true);
@@ -102,6 +110,7 @@ assert.equal(typeof app.updateCompanyTestFeedbackCheck, "function");
 assert.equal(typeof app.companyTestFeedbackStatus, "function");
 assert.equal(typeof app.companyTestInputStatus, "function");
 assert.equal(typeof app.companyTestParsedSummary, "function");
+assert.equal(typeof app.parseCompanyTestTalentEntries, "function");
 assert.equal(typeof app.sendTargetsForCompanyTest, "function");
 assert.equal(typeof app.customerBlockedReasons, "function");
 assert.equal(typeof app.clearCompanyTestInput, "function");

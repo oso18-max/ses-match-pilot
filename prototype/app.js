@@ -27,7 +27,25 @@ NG: 外国籍`,
 稼働: 即日
 働き方: 週3リモート可
 年齢: 42歳
-商流: 二次請`,
+商流: 二次請
+---
+Reactフロントエンドエンジニア
+スキル: React, TypeScript, Next.js
+希望単価: 72万
+勤務地: 大阪
+稼働: 来月
+働き方: フルリモート可
+年齢: 35歳
+商流: 一次請
+---
+Pythonデータ処理エンジニア
+スキル: Python, SQL, PostgreSQL
+希望単価: 66万
+勤務地: 福岡
+稼働: 来月
+働き方: 常駐可
+年齢: 50歳
+商流: 三次請`,
     customerCsv: `company,person,email,sendable,ngSkills,ngConditions,ngWords,maxAge,maxCommerceLevel
 株式会社アルファ,田中,tanaka@alpha.example.invalid,送信可,,,,,
 ベータソリューションズ株式会社,採用担当,ses@beta.example.invalid,送信可,常駐のみ,単価70万円超NG,,45,2
@@ -574,12 +592,12 @@ function parseCompanyTestRequest(text) {
   };
 }
 
-function parseCompanyTestTalent(text) {
+function parseCompanyTestTalent(text, index = 1) {
   const skills = extractKnownSkills(text);
   const sourceText = String(text || "");
   return {
-    id: "company_test_talent",
-    code: "test_engineer_001",
+    id: `company_test_talent_${index}`,
+    code: `test_engineer_${String(index).padStart(3, "0")}`,
     role: sourceText.split(/\r?\n/).find(Boolean) || "テスト人材",
     sourceText,
     skills: skills.length ? skills : ["Java"],
@@ -590,6 +608,14 @@ function parseCompanyTestTalent(text) {
     age: extractAge(text),
     commerceLevel: extractCommerceLevel(text)
   };
+}
+
+function parseCompanyTestTalentEntries(text) {
+  const entries = String(text || "")
+    .split(/\n\s*(?:---+|===+|人材区切り)\s*\n/g)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  return (entries.length ? entries : [String(text || "")]).map((entry, index) => parseCompanyTestTalent(entry, index + 1));
 }
 
 function parseCompanyTestCsvRows(text) {
@@ -736,7 +762,7 @@ function companyTestInputStatus() {
 
 function companyTestParsedSummary() {
   const request = parseCompanyTestRequest(state.companyTest.requestText);
-  const talent = parseCompanyTestTalent(state.companyTest.talentText);
+  const talents = parseCompanyTestTalentEntries(state.companyTest.talentText);
   const customers = parseCompanyTestCustomers(state.companyTest.customerCsv);
   const sendableCustomers = customers.filter((customer) => customer.sendable).length;
   return [
@@ -747,8 +773,8 @@ function companyTestParsedSummary() {
     },
     {
       item: "人材",
-      value: talent.role,
-      detail: `スキル ${talent.skills.join(" / ")} / 希望 ${talent.unit}万 / ${talent.location} / ${talent.workStyle}`
+      value: `${talents.length}名`,
+      detail: talents.map((talent) => `${talent.role}: ${talent.skills.join(" / ")} / ${talent.unit}万`).join(" ｜ ")
     },
     {
       item: "送信先",
@@ -1123,11 +1149,15 @@ function runCompanyTestMatching() {
     return;
   }
   const request = parseCompanyTestRequest(state.companyTest.requestText);
-  const talent = parseCompanyTestTalent(state.companyTest.talentText);
+  const talents = parseCompanyTestTalentEntries(state.companyTest.talentText);
   const testCustomers = parseCompanyTestCustomers(state.companyTest.customerCsv);
-  const match = score(request, talent);
+  const candidateMatches = talents
+    .map((talent) => score(request, talent))
+    .sort((a, b) => b.score - a.score);
+  const match = candidateMatches[0];
+  const talent = talents.find((item) => item.id === match.talentId) || talents[0];
   const targets = sendTargetsForCompanyTest(request, talent, testCustomers);
-  state.companyTest.result = { request, talent, match, targets };
+  state.companyTest.result = { request, talent, talents, match, candidateMatches, targets };
   addCompanyTestHistory(state.companyTest.result);
   saveCompanyTestDraft();
   render();
@@ -1173,11 +1203,20 @@ function companyTestReport(result) {
   if (!result) return "";
   const sendableTargets = result.targets.filter((target) => target.canSend);
   const blockedTargets = result.targets.filter((target) => !target.canSend);
+  const talents = result.talents || [result.talent];
+  const ranking = (result.candidateMatches || [result.match]).map((match, index) => {
+    const talent = talents.find((item) => item.id === match.talentId) || result.talent;
+    return `${index + 1}. ${talent.role}: ${match.score}点 / ${match.rank}`;
+  });
   return [
     "SES Auto Send テスト結果",
     `マッチング点数: ${result.match.score}点 / ${result.match.rank}`,
+    `判定人材数: ${talents.length}名`,
     `送信可能: ${sendableTargets.length}件`,
     `除外: ${blockedTargets.length}件`,
+    "",
+    "候補人材ランキング:",
+    ...ranking,
     "",
     "送信可能企業:",
     ...sendableTargets.map((target) => `- ${target.company} / ${target.email}`),
@@ -1896,7 +1935,7 @@ function renderCompanyTest() {
         </div>
         <div class="guide-card">
           <strong>人材情報</strong>
-          <span>スキル、希望単価、勤務地、稼働可能時期、リモート可否を文章で貼れます。</span>
+          <span>複数人材を貼れます。人材ごとに --- で区切るとランキング判定します。</span>
         </div>
         <div class="guide-card">
           <strong>送信先CSV</strong>
@@ -1983,10 +2022,27 @@ function renderCompanyTest() {
       </section>
       <div class="metrics">
         <div class="metric is-accent"><span>マッチング点数</span><strong>${result.match.score}</strong><small>${result.match.rank}</small></div>
+        <div class="metric"><span>判定人材</span><strong>${(result.talents || [result.talent]).length}</strong><small>ランキング対象</small></div>
         <div class="metric is-success"><span>送信可能</span><strong>${sendableTargets.length}</strong><small>個別送信候補</small></div>
         <div class="metric is-danger"><span>除外</span><strong>${blockedTargets.length}</strong><small>NG/停止</small></div>
-        <div class="metric"><span>送信処理</span><strong>0</strong><small>実送信なし</small></div>
       </div>
+      <section class="panel">
+        <h2>候補人材ランキング</h2>
+        ${table(
+          ["順位", "人材", "点数", "主な理由"],
+          (result.candidateMatches || [result.match]).map((match, index) => {
+            const talent = (result.talents || [result.talent]).find((item) => item.id === match.talentId) || result.talent;
+            return `
+              <tr>
+                <td><strong>${index + 1}</strong></td>
+                <td><strong>${escapeHtml(talent.role)}</strong><br><span class="muted">${talent.code}</span></td>
+                <td><strong>${match.score}点</strong><br><span class="muted">${match.rank}</span></td>
+                <td>${matchBreakdown(match)}</td>
+              </tr>
+            `;
+          })
+        )}
+      </section>
       <div class="grid-2">
         <section class="panel">
           <h2>送信先判定</h2>
@@ -2254,6 +2310,7 @@ if (typeof module !== "undefined") {
     sendTargetsForCompanyTest,
     parseCompanyTestRequest,
     parseCompanyTestTalent,
+    parseCompanyTestTalentEntries,
     parseCompanyTestCsvRows,
     companyTestCsvHeaders,
     parseCompanyTestCustomers,
