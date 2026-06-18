@@ -2,6 +2,7 @@ const { spawnSync } = require("node:child_process");
 const path = require("node:path");
 
 const tests = [
+  "app-state-persistence-smoke-test.cjs",
   "customer-csv-importer-smoke-test.cjs",
   "company-test-smoke-test.cjs",
   "company-test-readiness-smoke-test.cjs",

@@ -13,6 +13,8 @@ assert.match(appSource, /function mailReviewSummary/);
 assert.match(appSource, /function markMailReviewed/);
 assert.match(appSource, /確認済みにする/);
 assert.match(appSource, /確認済み履歴/);
+assert.match(appSource, /function saveAppState/);
+assert.match(appSource, /function loadAppState/);
 assert.match(appSource, /テスト表示です。外部送信はしません/);
 assert.match(appSource, /テスト送信済みにする/);
 assert.match(appSource, /function matchBreakdown/);

@@ -452,6 +452,8 @@ const templates = [
   "お世話になっております。直近稼働可能な候補者についてご連絡いたします。"
 ];
 
+const appStateStorageKey = "sesAutoSendAppState";
+
 function normalize(value) {
   return String(value || "").toLowerCase();
 }
@@ -462,6 +464,39 @@ function escapeHtml(value) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+function safeArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function saveAppState() {
+  if (typeof localStorage === "undefined") return;
+  localStorage.setItem(appStateStorageKey, JSON.stringify({
+    autoSend: state.autoSend,
+    sendThreshold: state.sendThreshold,
+    maxSendPerTalent: state.maxSendPerTalent,
+    sentProposalIds: state.sentProposalIds,
+    reviewedMailIds: state.reviewedMailIds,
+    mailReviewHistory: state.mailReviewHistory
+  }));
+}
+
+function loadAppState() {
+  if (typeof localStorage === "undefined") return;
+  const saved = localStorage.getItem(appStateStorageKey);
+  if (!saved) return;
+  try {
+    const draft = JSON.parse(saved);
+    state.autoSend = Boolean(draft.autoSend);
+    state.sendThreshold = Number(draft.sendThreshold || state.sendThreshold);
+    state.maxSendPerTalent = Number(draft.maxSendPerTalent || state.maxSendPerTalent);
+    state.sentProposalIds = safeArray(draft.sentProposalIds);
+    state.reviewedMailIds = safeArray(draft.reviewedMailIds);
+    state.mailReviewHistory = safeArray(draft.mailReviewHistory).slice(0, 10);
+  } catch {
+    localStorage.removeItem(appStateStorageKey);
+  }
 }
 
 function saveCompanyTestDraft() {
@@ -906,6 +941,7 @@ function markMailReviewed(id, action = "確認済みにする") {
     ...state.mailReviewHistory
   ].slice(0, 10);
 
+  saveAppState();
   if (typeof document !== "undefined") {
     render();
   }
@@ -1207,6 +1243,17 @@ function setTalent(id) {
 
 function toggleAutoSend() {
   state.autoSend = !state.autoSend;
+  saveAppState();
+  render();
+}
+
+function updateSendSetting(field, value) {
+  if (field === "autoSend") {
+    state.autoSend = value === "on";
+  } else {
+    state[field] = Number(value);
+  }
+  saveAppState();
   render();
 }
 
@@ -1229,6 +1276,7 @@ function openUnsentQueue() {
 function markProposalSent(id) {
   if (!state.sentProposalIds.includes(id)) state.sentProposalIds.push(id);
   state.showUnsentQueue = true;
+  saveAppState();
   render();
   document.getElementById("unsentQueue")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -1237,6 +1285,7 @@ function runTestSendOne() {
   const proposal = unsentProposals()[0];
   if (!proposal) return;
   if (!state.sentProposalIds.includes(proposal.id)) state.sentProposalIds.push(proposal.id);
+  saveAppState();
   render();
 }
 
@@ -2337,14 +2386,14 @@ function renderSettings() {
         <div class="form-grid">
           <div class="field wide">
             <label>自動送信</label>
-            <select onchange="state.autoSend = this.value === 'on'; render();">
+            <select onchange="updateSendSetting('autoSend', this.value)">
               <option value="off" ${state.autoSend ? "" : "selected"}>OFF: 人が確認して送信</option>
               <option value="on" ${state.autoSend ? "selected" : ""}>ON: 条件を満たしたら自動送信</option>
             </select>
           </div>
           <div class="field">
             <label>送信するマッチング点数</label>
-            <select onchange="state.sendThreshold = Number(this.value); render();">
+            <select onchange="updateSendSetting('sendThreshold', this.value)">
               <option value="80" ${state.sendThreshold === 80 ? "selected" : ""}>80点以上だけ送信</option>
               <option value="70" ${state.sendThreshold === 70 ? "selected" : ""}>70点以上だけ送信</option>
               <option value="60" ${state.sendThreshold === 60 ? "selected" : ""}>60点以上だけ送信</option>
@@ -2352,7 +2401,7 @@ function renderSettings() {
           </div>
           <div class="field">
             <label>同一人材の送信上限</label>
-            <select onchange="state.maxSendPerTalent = Number(this.value); render();">
+            <select onchange="updateSendSetting('maxSendPerTalent', this.value)">
               <option value="1" ${state.maxSendPerTalent === 1 ? "selected" : ""}>1人材につき1件まで</option>
               <option value="3" ${state.maxSendPerTalent === 3 ? "selected" : ""}>1人材につき3件まで</option>
               <option value="5" ${state.maxSendPerTalent === 5 ? "selected" : ""}>1人材につき5件まで</option>
@@ -2413,6 +2462,7 @@ function updateTitle() {
 }
 
 function render() {
+  if (typeof document === "undefined") return;
   updateTitle();
   const views = {
     overview: renderOverview,
@@ -2434,6 +2484,7 @@ function render() {
 }
 
 if (typeof document !== "undefined") {
+  loadAppState();
   loadCompanyTestDraft();
   const defaultView = document.body?.dataset.defaultView;
   const hashView = window.location.hash.replace("#", "");
@@ -2479,6 +2530,9 @@ if (typeof module !== "undefined") {
     dealForInterview,
     dealGrossProfit,
     dealGrossRate,
+    saveAppState,
+    loadAppState,
+    updateSendSetting,
     mailReviewSummary,
     markMailReviewed,
     sharedLedgerSummary,
