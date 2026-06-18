@@ -439,6 +439,60 @@ textarea {
   gap: 14px;
 }
 
+.input-status-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.input-status-card {
+  display: grid;
+  gap: 5px;
+  min-height: 86px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.input-status-card strong {
+  font-size: 13px;
+}
+
+.input-status-card span {
+  width: fit-content;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.input-status-card small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.input-status-card.ok {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.input-status-card.ok span {
+  background: var(--success);
+}
+
+.input-status-card.warn {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.input-status-card.warn span {
+  background: var(--warn);
+}
+
 .guide-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -763,6 +817,7 @@ tr:last-child td { border-bottom: 0; }
   .flow,
   .test-steps,
   .tester-layout,
+  .input-status-grid,
   .handoff-banner,
   .guide-grid,
   .form-grid { grid-template-columns: 1fr; }

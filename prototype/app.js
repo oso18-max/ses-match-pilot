@@ -525,11 +525,49 @@ function validateCompanyTestInput() {
   });
   const customers = parseCompanyTestCustomers(state.companyTest.customerCsv);
   if (!customers.length) errors.push("送信先CSVがありません");
-  customers.forEach((customer, index) => {
-    if (!customer.company) errors.push(`送信先${index + 1}: 会社名がありません`);
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) errors.push(`送信先${index + 1}: メール形式が不正です`);
+  const rawRows = parseCompanyTestCsvRows(state.companyTest.customerCsv).slice(1);
+  const companyIndex = headers.indexOf("company");
+  const emailIndex = headers.indexOf("email");
+  rawRows.forEach((row, index) => {
+    const company = companyIndex >= 0 ? String(row[companyIndex] || "").trim() : "";
+    const email = emailIndex >= 0 ? String(row[emailIndex] || "").trim() : "";
+    if (companyIndex >= 0 && !company) errors.push(`送信先${index + 1}: 会社名がありません`);
+    if (emailIndex >= 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push(`送信先${index + 1}: メール形式が不正です`);
   });
   return errors;
+}
+
+function companyTestInputStatus() {
+  const requestSkills = extractKnownSkills(state.companyTest.requestText);
+  const talentSkills = extractKnownSkills(state.companyTest.talentText);
+  const headers = companyTestCsvHeaders(state.companyTest.customerCsv);
+  const rows = parseCompanyTestCsvRows(state.companyTest.customerCsv).slice(1);
+  const emailIndex = headers.indexOf("email");
+  const validEmails = rows.filter((row) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(row[emailIndex] || "").trim())).length;
+  const missingHeaders = ["company", "person", "email", "sendable"].filter((header) => !headers.includes(header));
+
+  return [
+    {
+      label: "案件スキル",
+      ok: requestSkills.length > 0,
+      detail: requestSkills.length ? `${requestSkills.join(" / ")} を検出` : "Java、React、Pythonなどのスキル名を入れてください"
+    },
+    {
+      label: "人材スキル",
+      ok: talentSkills.length > 0,
+      detail: talentSkills.length ? `${talentSkills.join(" / ")} を検出` : "人材側のスキル名を入れてください"
+    },
+    {
+      label: "送信先CSV",
+      ok: rows.length > 0 && missingHeaders.length === 0,
+      detail: missingHeaders.length ? `不足列: ${missingHeaders.join(", ")}` : `${rows.length}件を読込対象`
+    },
+    {
+      label: "メール形式",
+      ok: rows.length > 0 && validEmails === rows.length,
+      detail: rows.length ? `${validEmails}/${rows.length}件が有効` : "送信先を入れてください"
+    }
+  ];
 }
 
 function matchesQuery(record) {
@@ -1399,6 +1437,7 @@ function renderCompanyTest() {
   const firstTarget = sendableTargets[0] || result?.targets[0];
   const verdict = companyTestVerdict(result);
   const feedbackStatus = companyTestFeedbackStatus();
+  const inputStatus = companyTestInputStatus();
 
   return `
     <section class="panel">
@@ -1471,6 +1510,15 @@ function renderCompanyTest() {
           <span>送信先CSV</span>
           <textarea class="tester-textarea is-short" oninput="updateCompanyTestField('customerCsv', this.value)">${escapeHtml(state.companyTest.customerCsv)}</textarea>
         </label>
+      </div>
+      <div class="input-status-grid">
+        ${inputStatus.map((item) => `
+          <div class="input-status-card ${item.ok ? "ok" : "warn"}">
+            <strong>${item.label}</strong>
+            <span>${item.ok ? "OK" : "要確認"}</span>
+            <small>${escapeHtml(item.detail)}</small>
+          </div>
+        `).join("")}
       </div>
       <div class="toolbar">
         <button class="primary-action" onclick="runCompanyTestMatching()">マッチング実行</button>
@@ -1758,6 +1806,7 @@ if (typeof module !== "undefined") {
     companyTestCsvHeaders,
     parseCompanyTestCustomers,
     validateCompanyTestInput,
+    companyTestInputStatus,
     companyTestReport,
     companyTestVerdict,
     companyTestScoreRows,
