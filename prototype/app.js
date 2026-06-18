@@ -668,6 +668,33 @@ function score(request, talent) {
   const ngWordsOk = requestNgHits.length === 0;
   const eligibilityOk = ageOk && commerceOk && ngWordsOk;
   const cutoff = matchedRequired.length >= Math.ceil(req.required.length * 0.7) && unitOk && locationOk && eligibilityOk;
+  const checks = [
+    {
+      item: "単価",
+      ok: unitOk,
+      detail: unitOk ? `${talent.unit}万 <= 上限${req.unitMax}万` : `${talent.unit}万 > 上限${req.unitMax}万`
+    },
+    {
+      item: "勤務地/リモート",
+      ok: locationOk,
+      detail: locationOk ? `${talent.location} / ${talent.workStyle}` : `案件${req.location}に対して人材${talent.location}`
+    },
+    {
+      item: "年齢制限",
+      ok: ageOk,
+      detail: req.maxAge ? `${talent.age || "不明"}歳 / 上限${req.maxAge}歳` : "条件なし"
+    },
+    {
+      item: "商流制限",
+      ok: commerceOk,
+      detail: req.maxCommerceLevel == null ? "条件なし" : `${commerceLabel(talent.commerceLevel)} / 上限${commerceLabel(req.maxCommerceLevel)}`
+    },
+    {
+      item: "NGワード",
+      ok: ngWordsOk,
+      detail: requestNgHits.length ? requestNgHits.join(" / ") : "該当なし"
+    }
+  ];
   const scoreValue = cutoff
     ? Math.round((matchedRequired.length / req.required.length) * 40)
       + Math.round((matchedNice.length / Math.max(req.nice.length, 1)) * 15)
@@ -688,6 +715,7 @@ function score(request, talent) {
     matchedRequired,
     matchedNice,
     missing,
+    checks,
     reasons: [
       matchedRequired.length ? `必須一致: ${matchedRequired.join(" / ")}` : "必須一致なし",
       matchedNice.length ? `尚可一致: ${matchedNice.join(" / ")}` : "尚可一致なし",
@@ -1047,6 +1075,11 @@ function companyTestScoreRows(result) {
       status: result.match.missing.length ? "要確認" : "不足なし",
       detail: result.match.missing.join(" / ") || "不足なし"
     },
+    ...result.match.checks.map((check) => ({
+      item: check.item,
+      status: check.ok ? "OK" : "要確認",
+      detail: check.detail
+    })),
     {
       item: "判定理由",
       status: result.match.cutoff ? "候補" : "見送り",
