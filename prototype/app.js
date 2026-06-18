@@ -53,6 +53,7 @@ const publicViews = new Set([
   "send",
   "history",
   "replies",
+  "interviews",
   "test",
   "companyTest",
   "settings"
@@ -302,6 +303,42 @@ const replies = [
     linkedHistory: "未確定",
     detected: "案件名らしき語句のみ一致",
     nextAction: "手動確認"
+  }
+];
+
+const interviews = [
+  {
+    id: "iv_001",
+    historyId: "hist_002",
+    company: "ベータソリューションズ株式会社",
+    request: "React 管理画面",
+    talent: "engineer_002",
+    scheduledAt: "2026-06-18 14:00",
+    status: "面談予定",
+    result: "未実施",
+    nextAction: "前日リマインド"
+  },
+  {
+    id: "iv_002",
+    historyId: "hist_001",
+    company: "株式会社アルファ",
+    request: "Java/Spring 案件",
+    talent: "engineer_001",
+    scheduledAt: "2026-06-17 16:00",
+    status: "結果待ち",
+    result: "先方確認中",
+    nextAction: "翌営業日に確認"
+  },
+  {
+    id: "iv_003",
+    historyId: "hist_003",
+    company: "デルタテック株式会社",
+    request: "Python バッチ改修",
+    talent: "engineer_003",
+    scheduledAt: "2026-06-16 11:00",
+    status: "見送り",
+    result: "単価差",
+    nextAction: "別人材を再提案"
   }
 ];
 
@@ -644,6 +681,17 @@ function companyTestInputStatus() {
 function matchesQuery(record) {
   if (!state.query) return true;
   return normalize(JSON.stringify(record)).includes(normalize(state.query));
+}
+
+function interviewSummary() {
+  return interviews.reduce((acc, item) => {
+    acc[item.status] = (acc[item.status] || 0) + 1;
+    return acc;
+  }, {});
+}
+
+function interviewForHistory(historyId) {
+  return interviews.find((item) => item.historyId === historyId);
 }
 
 function selectedRequest() {
@@ -1488,7 +1536,7 @@ function renderHistory() {
       <h2>送信履歴</h2>
       <p class="muted">どの会社へ、どの案件で、どの人材を、いつ送ったかを検索できます。</p>
       ${table(
-        ["送信日時", "会社/メール", "案件", "人材", "状態", "件名"],
+        ["送信日時", "会社/メール", "案件", "人材", "状態", "面談", "件名"],
         histories.filter(matchesQuery).map((item) => `
           <tr>
             <td>${item.sentAt}</td>
@@ -1496,6 +1544,7 @@ function renderHistory() {
             <td>${item.request}</td>
             <td>${item.talent}</td>
             <td><span class="status ${item.status === "返信あり" ? "ok" : "warn"}">${item.status}</span></td>
+            <td>${interviewForHistory(item.id) ? pill(interviewForHistory(item.id).status) : pill("未設定", "gray")}</td>
             <td>${item.subject}</td>
           </tr>
         `)
@@ -1510,14 +1559,47 @@ function renderReplies() {
       <h2>返信検知</h2>
       <p class="muted">返信元メールアドレス、件名、案件名らしき文字から過去の送信履歴に紐づける想定です。</p>
       ${table(
-        ["受信", "返信元/件名", "紐づけ", "検知理由", "次アクション"],
+        ["受信", "返信元/件名", "紐づけ", "面談", "検知理由", "次アクション"],
         replies.filter(matchesQuery).map((reply) => `
           <tr>
             <td>${reply.receivedAt}</td>
             <td>${reply.from}<br><strong>${reply.subject}</strong></td>
             <td>${reply.linkedHistory}</td>
+            <td>${interviewForHistory(reply.linkedHistory) ? pill(interviewForHistory(reply.linkedHistory).status) : pill("未設定", "gray")}</td>
             <td>${reply.detected}</td>
             <td>${reply.nextAction}</td>
+          </tr>
+        `)
+      )}
+    </section>
+  `;
+}
+
+function renderInterviews() {
+  const summary = interviewSummary();
+  return `
+    <section class="panel">
+      <div class="toolbar">
+        <h2>面談管理</h2>
+        <span class="muted">返信後の面談予定、結果待ち、見送り、次アクションを管理します。</span>
+      </div>
+      <div class="metrics">
+        <div class="metric is-success"><span>面談予定</span><strong>${summary["面談予定"] || 0}</strong><small>日程あり</small></div>
+        <div class="metric is-accent"><span>結果待ち</span><strong>${summary["結果待ち"] || 0}</strong><small>確認中</small></div>
+        <div class="metric is-danger"><span>見送り</span><strong>${summary["見送り"] || 0}</strong><small>再提案対象</small></div>
+        <div class="metric"><span>総件数</span><strong>${interviews.length}</strong><small>ダミーデータ</small></div>
+      </div>
+      ${table(
+        ["予定日時", "会社", "案件", "人材", "状態", "結果", "次アクション"],
+        interviews.filter(matchesQuery).map((item) => `
+          <tr>
+            <td>${item.scheduledAt}</td>
+            <td><strong>${item.company}</strong><br><span class="muted">${item.historyId}</span></td>
+            <td>${item.request}</td>
+            <td>${item.talent}</td>
+            <td><span class="status ${item.status === "面談予定" ? "ok" : item.status === "見送り" ? "bad" : "warn"}">${item.status}</span></td>
+            <td>${item.result}</td>
+            <td>${item.nextAction}</td>
           </tr>
         `)
       )}
@@ -1883,6 +1965,7 @@ function updateTitle() {
     send: "個別送信",
     history: "送信履歴",
     replies: "返信検知",
+    interviews: "面談管理",
     test: "テスト",
     companyTest: "企業テスト",
     settings: "設定"
@@ -1904,6 +1987,7 @@ function render() {
     send: renderSend,
     history: renderHistory,
     replies: renderReplies,
+    interviews: renderInterviews,
     test: renderTestConsole,
     companyTest: renderCompanyTest,
     settings: renderSettings
@@ -1950,6 +2034,9 @@ if (typeof module !== "undefined") {
     customers,
     histories,
     replies,
+    interviews,
+    interviewSummary,
+    interviewForHistory,
     score,
     rankedMatches,
     matchBatches,
