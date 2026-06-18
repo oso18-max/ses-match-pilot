@@ -1312,6 +1312,20 @@ function renderCompanyTest() {
           <button class="small-action" onclick="copyCompanyTestCsvTemplate()">CSVテンプレをコピー</button>
         </div>
       </div>
+      <div class="guide-grid">
+        <div class="guide-card">
+          <strong>80点以上</strong>
+          <span>提案候補として確認。送信可能企業とメール文面を見る。</span>
+        </div>
+        <div class="guide-card">
+          <strong>60〜79点</strong>
+          <span>要確認。単価、勤務地、スキル不足を見て営業判断する。</span>
+        </div>
+        <div class="guide-card">
+          <strong>59点以下</strong>
+          <span>見送り候補。案件か人材の条件を変えて再テストする。</span>
+        </div>
+      </div>
       <div class="tester-layout">
         <label class="field">
           <span>案件情報</span>
