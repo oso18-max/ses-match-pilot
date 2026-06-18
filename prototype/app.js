@@ -9,6 +9,8 @@ const state = {
   showMatchSettings: false,
   showUnsentQueue: true,
   sentProposalIds: [],
+  reviewedMailIds: [],
+  mailReviewHistory: [],
   companyTest: {
     requestText: `Java/Spring Boot案件
 必須: Java, Spring Boot, PostgreSQL
@@ -880,12 +882,44 @@ function dealForInterview(interviewId) {
   return deals.find((item) => item.interviewId === interviewId);
 }
 
+function mailReviewRecord(id) {
+  return incomingRequests.find((item) => item.id === id) || mailReviewItems.find((item) => item.id === id);
+}
+
+function isMailReviewed(id) {
+  return state.reviewedMailIds.includes(id);
+}
+
+function markMailReviewed(id, action = "確認済みにする") {
+  if (!isMailReviewed(id)) {
+    state.reviewedMailIds.push(id);
+  }
+
+  const record = mailReviewRecord(id);
+  state.mailReviewHistory = [
+    {
+      id,
+      reviewedAt: new Date().toLocaleString("ja-JP"),
+      subject: record?.subject || id,
+      action
+    },
+    ...state.mailReviewHistory
+  ].slice(0, 10);
+
+  if (typeof document !== "undefined") {
+    render();
+  }
+}
+
 function mailReviewSummary() {
-  const lowConfidenceRequests = incomingRequests.filter((request) => (request.classification?.confidence || 100) < 60);
+  const lowConfidenceRequests = incomingRequests.filter((request) => (
+    (request.classification?.confidence || 100) < 60 && !isMailReviewed(request.id)
+  ));
+  const reviewItems = mailReviewItems.filter((item) => !isMailReviewed(item.id));
   return {
     lowConfidenceRequests,
-    reviewItems: mailReviewItems,
-    total: lowConfidenceRequests.length + mailReviewItems.length
+    reviewItems,
+    total: lowConfidenceRequests.length + reviewItems.length
   };
 }
 
@@ -1633,7 +1667,7 @@ function renderInbox() {
         <span class="muted">低信頼度・判定不能のメールだけを確認します。外部送信はしません。</span>
       </div>
       ${reviews.total ? table(
-        ["受信", "件名", "分類", "信頼度", "検出場所/理由"],
+        ["受信", "件名", "分類", "信頼度", "検出場所/理由", "操作"],
         [
           ...reviews.lowConfidenceRequests.map((request) => `
             <tr>
@@ -1642,6 +1676,10 @@ function renderInbox() {
               <td><span class="status warn">${request.classification.type}</span></td>
               <td><strong>${request.classification.confidence}</strong><br><span class="muted">要確認</span></td>
               <td>${escapeHtml(request.classification.sourceSummary)}<br><span class="muted">${escapeHtml(request.classification.reason)}</span></td>
+              <td>
+                <button class="small-action is-primary" onclick="markMailReviewed('${request.id}', '案件として確認済み')">確認済みにする</button>
+                <button class="small-action" onclick="setRequest('${request.id}'); setView('matches')">マッチング</button>
+              </td>
             </tr>
           `),
           ...reviews.reviewItems.map((item) => `
@@ -1651,10 +1689,26 @@ function renderInbox() {
               <td><span class="status bad">${item.type}</span></td>
               <td><strong>${item.confidence}</strong><br><span class="muted">保留</span></td>
               <td>${escapeHtml(item.sourceSummary)}<br><span class="muted">${escapeHtml(item.reason)}</span></td>
+              <td><button class="small-action is-primary" onclick="markMailReviewed('${item.id}', '確認済みにする')">確認済みにする</button></td>
             </tr>
           `)
         ]
       ) : `<p class="muted">確認待ちメールはありません。</p>`}
+      ${state.mailReviewHistory.length ? `
+        <div class="review-history">
+          <h3>確認済み履歴</h3>
+          ${table(
+            ["日時", "件名", "対応"],
+            state.mailReviewHistory.map((item) => `
+              <tr>
+                <td>${item.reviewedAt}</td>
+                <td>${escapeHtml(item.subject)}</td>
+                <td>${escapeHtml(item.action)}</td>
+              </tr>
+            `)
+          )}
+        </div>
+      ` : ""}
     </section>
     <section class="panel">
       <h2>案件メール</h2>
@@ -2425,6 +2479,8 @@ if (typeof module !== "undefined") {
     dealForInterview,
     dealGrossProfit,
     dealGrossRate,
+    mailReviewSummary,
+    markMailReviewed,
     sharedLedgerSummary,
     score,
     rankedMatches,
