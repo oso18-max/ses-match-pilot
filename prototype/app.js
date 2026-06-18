@@ -58,6 +58,8 @@ Pythonデータ処理エンジニア
       exclusion: false,
       mail: false
     },
+    minScore: 80,
+    topTalentLimit: 3,
     errors: []
   }
 };
@@ -427,6 +429,8 @@ function saveCompanyTestDraft() {
     customerCsv: state.companyTest.customerCsv,
     feedbackText: state.companyTest.feedbackText,
     feedbackChecks: state.companyTest.feedbackChecks,
+    minScore: state.companyTest.minScore,
+    topTalentLimit: state.companyTest.topTalentLimit,
     history: state.companyTest.history
   }));
 }
@@ -442,6 +446,8 @@ function loadCompanyTestDraft() {
     state.companyTest.customerCsv = draft.customerCsv || state.companyTest.customerCsv;
     state.companyTest.feedbackText = draft.feedbackText || "";
     state.companyTest.feedbackChecks = { ...state.companyTest.feedbackChecks, ...(draft.feedbackChecks || {}) };
+    state.companyTest.minScore = Number(draft.minScore || state.companyTest.minScore);
+    state.companyTest.topTalentLimit = Number(draft.topTalentLimit || state.companyTest.topTalentLimit);
     state.companyTest.history = Array.isArray(draft.history) ? draft.history.slice(0, 10) : [];
   } catch {
     localStorage.removeItem("sesAutoSendCompanyTest");
@@ -452,6 +458,15 @@ function updateCompanyTestField(field, value) {
   state.companyTest[field] = value;
   state.companyTest.errors = [];
   saveCompanyTestDraft();
+}
+
+function updateCompanyTestNumber(field, value) {
+  const next = Number(value);
+  if (!Number.isNaN(next)) state.companyTest[field] = next;
+  state.companyTest.result = null;
+  state.companyTest.errors = [];
+  saveCompanyTestDraft();
+  render();
 }
 
 function updateCompanyTestFeedbackCheck(field, checked) {
@@ -1154,10 +1169,15 @@ function runCompanyTestMatching() {
   const candidateMatches = talents
     .map((talent) => score(request, talent))
     .sort((a, b) => b.score - a.score);
-  const match = candidateMatches[0];
+  const minScore = Number(state.companyTest.minScore || 80);
+  const topTalentLimit = Math.max(Number(state.companyTest.topTalentLimit || 3), 1);
+  const eligibleMatches = candidateMatches
+    .filter((match) => match.rank !== "除外" && match.score >= minScore)
+    .slice(0, topTalentLimit);
+  const match = eligibleMatches[0] || candidateMatches[0];
   const talent = talents.find((item) => item.id === match.talentId) || talents[0];
   const targets = sendTargetsForCompanyTest(request, talent, testCustomers);
-  state.companyTest.result = { request, talent, talents, match, candidateMatches, targets };
+  state.companyTest.result = { request, talent, talents, match, candidateMatches, eligibleMatches, minScore, topTalentLimit, targets };
   addCompanyTestHistory(state.companyTest.result);
   saveCompanyTestDraft();
   render();
@@ -1204,14 +1224,16 @@ function companyTestReport(result) {
   const sendableTargets = result.targets.filter((target) => target.canSend);
   const blockedTargets = result.targets.filter((target) => !target.canSend);
   const talents = result.talents || [result.talent];
-  const ranking = (result.candidateMatches || [result.match]).map((match, index) => {
+  const ranking = (result.candidateMatches || [result.match]).slice(0, result.topTalentLimit || 3).map((match, index) => {
     const talent = talents.find((item) => item.id === match.talentId) || result.talent;
     return `${index + 1}. ${talent.role}: ${match.score}点 / ${match.rank}`;
   });
   return [
     "SES Auto Send テスト結果",
     `マッチング点数: ${result.match.score}点 / ${result.match.rank}`,
+    `提案候補基準: ${result.minScore || state.companyTest.minScore}点以上 / 上位${result.topTalentLimit || state.companyTest.topTalentLimit}名`,
     `判定人材数: ${talents.length}名`,
+    `提案候補人材: ${(result.eligibleMatches || []).length}名`,
     `送信可能: ${sendableTargets.length}件`,
     `除外: ${blockedTargets.length}件`,
     "",
@@ -1243,7 +1265,8 @@ function companyTestVerdict(result) {
     };
   }
   const sendableTargets = result.targets.filter((target) => target.canSend);
-  if (result.match.score >= 80 && sendableTargets.length > 0) {
+  const minScore = result.minScore || state.companyTest.minScore || 80;
+  if (result.match.score >= minScore && result.match.rank !== "除外" && sendableTargets.length > 0) {
     return {
       label: "テスト提案可能",
       detail: "マッチング点数と送信可能企業があります。提案メールプレビューを確認してください。",
@@ -1363,7 +1386,9 @@ function companyTestPackage() {
     talentText: state.companyTest.talentText,
     customerCsv: state.companyTest.customerCsv,
     feedbackText: state.companyTest.feedbackText,
-    feedbackChecks: state.companyTest.feedbackChecks
+    feedbackChecks: state.companyTest.feedbackChecks,
+    minScore: state.companyTest.minScore,
+    topTalentLimit: state.companyTest.topTalentLimit
   };
 }
 
@@ -1386,6 +1411,8 @@ function applyCompanyTestPackage(packageData) {
   state.companyTest.customerCsv = packageData.customerCsv || state.companyTest.customerCsv;
   state.companyTest.feedbackText = packageData.feedbackText || "";
   state.companyTest.feedbackChecks = { ...state.companyTest.feedbackChecks, ...(packageData.feedbackChecks || {}) };
+  state.companyTest.minScore = Number(packageData.minScore || state.companyTest.minScore);
+  state.companyTest.topTalentLimit = Number(packageData.topTalentLimit || state.companyTest.topTalentLimit);
   state.companyTest.result = null;
   state.companyTest.errors = [];
   saveCompanyTestDraft();
@@ -1996,6 +2023,21 @@ function renderCompanyTest() {
           `)
         )}
       </section>
+      <section class="test-settings">
+        <div>
+          <label class="field compact-field">
+            <span>提案候補の最低点</span>
+            <input type="number" min="40" max="100" step="5" value="${state.companyTest.minScore}" oninput="updateCompanyTestNumber('minScore', this.value)">
+          </label>
+        </div>
+        <div>
+          <label class="field compact-field">
+            <span>表示する上位人材数</span>
+            <input type="number" min="1" max="10" step="1" value="${state.companyTest.topTalentLimit}" oninput="updateCompanyTestNumber('topTalentLimit', this.value)">
+          </label>
+        </div>
+        <p class="muted">企業テスト用の一時設定です。実送信や外部連携は発生しません。</p>
+      </section>
       <div class="toolbar">
         <button class="primary-action" onclick="runCompanyTestMatching()">マッチング実行</button>
         <button class="ghost-action" onclick="resetCompanyTestSample()">サンプルに戻す</button>
@@ -2023,6 +2065,7 @@ function renderCompanyTest() {
       <div class="metrics">
         <div class="metric is-accent"><span>マッチング点数</span><strong>${result.match.score}</strong><small>${result.match.rank}</small></div>
         <div class="metric"><span>判定人材</span><strong>${(result.talents || [result.talent]).length}</strong><small>ランキング対象</small></div>
+        <div class="metric is-success"><span>提案候補人材</span><strong>${(result.eligibleMatches || []).length}</strong><small>${result.minScore}点以上</small></div>
         <div class="metric is-success"><span>送信可能</span><strong>${sendableTargets.length}</strong><small>個別送信候補</small></div>
         <div class="metric is-danger"><span>除外</span><strong>${blockedTargets.length}</strong><small>NG/停止</small></div>
       </div>
@@ -2030,13 +2073,14 @@ function renderCompanyTest() {
         <h2>候補人材ランキング</h2>
         ${table(
           ["順位", "人材", "点数", "主な理由"],
-          (result.candidateMatches || [result.match]).map((match, index) => {
+          (result.candidateMatches || [result.match]).slice(0, result.topTalentLimit || state.companyTest.topTalentLimit || 3).map((match, index) => {
             const talent = (result.talents || [result.talent]).find((item) => item.id === match.talentId) || result.talent;
+            const isEligible = (result.eligibleMatches || []).some((eligible) => eligible.talentId === match.talentId);
             return `
               <tr>
                 <td><strong>${index + 1}</strong></td>
                 <td><strong>${escapeHtml(talent.role)}</strong><br><span class="muted">${talent.code}</span></td>
-                <td><strong>${match.score}点</strong><br><span class="muted">${match.rank}</span></td>
+                <td><strong>${match.score}点</strong><br><span class="status ${isEligible ? "ok" : "hold"}">${isEligible ? "候補" : "基準外"}</span></td>
                 <td>${matchBreakdown(match)}</td>
               </tr>
             `;
@@ -2300,6 +2344,7 @@ if (typeof module !== "undefined") {
     renderTestConsole,
     runTestSendOne,
     updateCompanyTestField,
+    updateCompanyTestNumber,
     updateCompanyTestFeedbackCheck,
     resetCompanyTestSample,
     applyCompanyTestPreset,

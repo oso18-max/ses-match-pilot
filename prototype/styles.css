@@ -303,7 +303,7 @@ textarea {
 
 .metrics {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
 }
 
@@ -503,6 +503,22 @@ textarea {
 
 .read-summary h2 {
   margin-bottom: 0;
+}
+
+.test-settings {
+  display: grid;
+  grid-template-columns: minmax(160px, 220px) minmax(160px, 220px) minmax(0, 1fr);
+  gap: 12px;
+  align-items: end;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.compact-field input {
+  width: 100%;
 }
 
 .guide-grid {
@@ -741,6 +757,7 @@ tr:last-child td { border-bottom: 0; }
 .status.ok { color: var(--success); }
 .status.warn { color: var(--warn); }
 .status.bad { color: var(--danger); }
+.status.hold { color: var(--muted); }
 
 .card-list { display: grid; gap: 10px; }
 
