@@ -493,6 +493,18 @@ textarea {
   background: var(--warn);
 }
 
+.read-summary {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #f8fafc;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.read-summary h2 {
+  margin-bottom: 0;
+}
+
 .guide-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

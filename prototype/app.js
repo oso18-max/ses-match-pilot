@@ -628,7 +628,7 @@ function parseCompanyTestCsvRows(text) {
 }
 
 function companyTestCsvHeaders(csvText) {
-  return parseCompanyTestCsvRows(csvText)[0]?.map((item) => item.trim()) || [];
+  return parseCompanyTestCsvRows(csvText)[0]?.map((item) => normalizeCompanyTestHeader(item)) || [];
 }
 
 function splitCsvList(value) {
@@ -640,9 +640,25 @@ function parseOptionalNumber(value) {
   return matched ? Number(matched[0]) : null;
 }
 
+function normalizeCompanyTestHeader(header) {
+  const key = String(header || "").trim().replace(/\s+/g, "").toLowerCase();
+  const aliases = {
+    company: ["company", "会社名", "企業名", "取引先", "顧客名"],
+    person: ["person", "担当者", "担当者名", "宛名", "担当"],
+    email: ["email", "mail", "メール", "メールアドレス", "送信先メール"],
+    sendable: ["sendable", "送信可否", "送信状態", "送信対象", "配信可否"],
+    ngSkills: ["ngskills", "ngスキル", "ng技術", "不可スキル"],
+    ngConditions: ["ngconditions", "ng条件", "送信ng条件", "不可条件"],
+    ngWords: ["ngwords", "ngワード", "ng語句", "除外ワード"],
+    maxAge: ["maxage", "年齢上限", "上限年齢", "最大年齢"],
+    maxCommerceLevel: ["maxcommercelevel", "商流上限", "最大商流", "商流制限"]
+  };
+  return Object.entries(aliases).find(([, values]) => values.includes(key))?.[0] || String(header || "").trim();
+}
+
 function parseCompanyTestCustomers(csvText) {
   const rows = parseCompanyTestCsvRows(csvText);
-  const headers = rows.shift()?.map((item) => item.trim()) || [];
+  const headers = rows.shift()?.map((item) => normalizeCompanyTestHeader(item)) || [];
   return rows.map((line, index) => {
     const values = line.map((item) => item.trim());
     const row = Object.fromEntries(headers.map((header, headerIndex) => [header, values[headerIndex] || ""]));
@@ -714,6 +730,30 @@ function companyTestInputStatus() {
       label: "メール形式",
       ok: rows.length > 0 && validEmails === rows.length,
       detail: rows.length ? `${validEmails}/${rows.length}件が有効` : "送信先を入れてください"
+    }
+  ];
+}
+
+function companyTestParsedSummary() {
+  const request = parseCompanyTestRequest(state.companyTest.requestText);
+  const talent = parseCompanyTestTalent(state.companyTest.talentText);
+  const customers = parseCompanyTestCustomers(state.companyTest.customerCsv);
+  const sendableCustomers = customers.filter((customer) => customer.sendable).length;
+  return [
+    {
+      item: "案件",
+      value: request.subject,
+      detail: `必須 ${request.extracted.required.join(" / ")} / 単価 ${request.extracted.unitMax}万 / ${request.extracted.location} / ${request.extracted.workStyle}`
+    },
+    {
+      item: "人材",
+      value: talent.role,
+      detail: `スキル ${talent.skills.join(" / ")} / 希望 ${talent.unit}万 / ${talent.location} / ${talent.workStyle}`
+    },
+    {
+      item: "送信先",
+      value: `${customers.length}件`,
+      detail: `送信可 ${sendableCustomers}件 / 停止・除外候補 ${customers.length - sendableCustomers}件`
     }
   ];
 }
@@ -1818,6 +1858,7 @@ function renderCompanyTest() {
   const verdict = companyTestVerdict(result);
   const feedbackStatus = companyTestFeedbackStatus();
   const inputStatus = companyTestInputStatus();
+  const parsedSummary = companyTestParsedSummary();
 
   return `
     <section class="panel">
@@ -1859,7 +1900,7 @@ function renderCompanyTest() {
         </div>
         <div class="guide-card">
           <strong>送信先CSV</strong>
-          <span>必須列は company, person, email, sendable。任意で ngSkills, ngConditions, ngWords, maxAge, maxCommerceLevel も使えます。</span>
+          <span>必須列は company, person, email, sendable。会社名、担当者名、メールアドレス、送信可否などの日本語ヘッダーも使えます。</span>
           <button class="small-action" onclick="copyCompanyTestCsvTemplate()">CSVテンプレをコピー</button>
         </div>
       </div>
@@ -1900,6 +1941,22 @@ function renderCompanyTest() {
           </div>
         `).join("")}
       </div>
+      <section class="read-summary">
+        <div class="toolbar">
+          <h2>読み取り結果</h2>
+          <span class="muted">貼り付けた内容をどう解釈したかの確認用です。</span>
+        </div>
+        ${table(
+          ["対象", "読み取り", "内容"],
+          parsedSummary.map((item) => `
+            <tr>
+              <td><strong>${item.item}</strong></td>
+              <td>${escapeHtml(item.value)}</td>
+              <td>${escapeHtml(item.detail)}</td>
+            </tr>
+          `)
+        )}
+      </section>
       <div class="toolbar">
         <button class="primary-action" onclick="runCompanyTestMatching()">マッチング実行</button>
         <button class="ghost-action" onclick="resetCompanyTestSample()">サンプルに戻す</button>
@@ -2202,6 +2259,7 @@ if (typeof module !== "undefined") {
     parseCompanyTestCustomers,
     validateCompanyTestInput,
     companyTestInputStatus,
+    companyTestParsedSummary,
     companyTestReport,
     companyTestVerdict,
     companyTestScoreRows,
