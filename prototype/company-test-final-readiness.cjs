@@ -18,6 +18,7 @@ const invite = readText("COMPANY_TEST_INVITE.md");
 const sampleReport = readText("COMPANY_TEST_SAMPLE_REPORT.md");
 const feedback = readText("COMPANY_TEST_FEEDBACK.md");
 const triage = readText("COMPANY_TEST_TRIAGE.md");
+const runLog = readText("COMPANY_TEST_RUN_LOG.md");
 const publicationPrep = readText("PUBLICATION_APPROVAL_PREP.md");
 const security = readText("SECURITY_REVIEW.md");
 const companyPage = fs.readFileSync(path.join(__dirname, "company-test.html"), "utf8");
@@ -53,7 +54,7 @@ const checks = [
   },
   {
     item: "配布パッケージ",
-    ok: has(packageGuide, /企業へ渡すもの/) && has(packageGuide, /PMが確認するコマンド/) && has(packageGuide, /COMPANY_TEST_SAMPLE_REPORT\.md/) && has(packageGuide, /COMPANY_TEST_TRIAGE\.md/) && has(packageGuide, /PUBLICATION_APPROVAL_PREP\.md/),
+    ok: has(packageGuide, /企業へ渡すもの/) && has(packageGuide, /PMが確認するコマンド/) && has(packageGuide, /COMPANY_TEST_SAMPLE_REPORT\.md/) && has(packageGuide, /COMPANY_TEST_TRIAGE\.md/) && has(packageGuide, /COMPANY_TEST_RUN_LOG\.md/) && has(packageGuide, /PUBLICATION_APPROVAL_PREP\.md/),
     detail: "渡す資料と確認コマンドを1か所で見られる"
   },
   {
@@ -85,6 +86,11 @@ const checks = [
     item: "整理表",
     ok: has(triage, /即修正/) && has(triage, /AI検討/) && has(triage, /本番連携/) && has(triage, /PM報告テンプレ/),
     detail: "回収後の実装判断に仕分けできる"
+  },
+  {
+    item: "実施ログ",
+    ok: has(runLog, /依頼日/) && has(runLog, /返却日/) && has(runLog, /反映済/),
+    detail: "企業テストの依頼と回収状況を追跡できる"
   },
   {
     item: "渡す前チェック",

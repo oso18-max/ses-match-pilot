@@ -9,6 +9,7 @@ const invite = fs.readFileSync(path.join(root, "COMPANY_TEST_INVITE.md"), "utf8"
 const sampleReport = fs.readFileSync(path.join(root, "COMPANY_TEST_SAMPLE_REPORT.md"), "utf8");
 const feedback = fs.readFileSync(path.join(root, "COMPANY_TEST_FEEDBACK.md"), "utf8");
 const triage = fs.readFileSync(path.join(root, "COMPANY_TEST_TRIAGE.md"), "utf8");
+const runLog = fs.readFileSync(path.join(root, "COMPANY_TEST_RUN_LOG.md"), "utf8");
 const publicationPrep = fs.readFileSync(path.join(root, "PUBLICATION_APPROVAL_PREP.md"), "utf8");
 const security = fs.readFileSync(path.join(root, "SECURITY_REVIEW.md"), "utf8");
 const companyPage = fs.readFileSync(path.join(__dirname, "company-test.html"), "utf8");
@@ -23,6 +24,7 @@ assert.match(packageGuide, /企業へ渡すもの/);
 assert.match(packageGuide, /node prototype\\company-test-final-readiness\.cjs/);
 assert.match(packageGuide, /COMPANY_TEST_SAMPLE_REPORT\.md/);
 assert.match(packageGuide, /COMPANY_TEST_TRIAGE\.md/);
+assert.match(packageGuide, /COMPANY_TEST_RUN_LOG\.md/);
 assert.match(packageGuide, /PUBLICATION_APPROVAL_PREP\.md/);
 assert.match(invite, /SES Auto Send 企業テストのお願い/);
 assert.match(invite, /実メール本文、実スキルシート本文、個人情報は入れない/);
@@ -35,6 +37,10 @@ assert.match(feedback, /提案メール文面/);
 assert.match(triage, /即修正/);
 assert.match(triage, /AI検討/);
 assert.match(triage, /本番連携/);
+assert.match(runLog, /企業テスト 実施ログ/);
+assert.match(runLog, /依頼日/);
+assert.match(runLog, /返却日/);
+assert.match(runLog, /反映済/);
 assert.match(publicationPrep, /GitHubへpush/);
 assert.match(publicationPrep, /承認が必要な時のコピー文/);
 assert.match(security, /企業テスト前セキュリティゲート/);
@@ -49,6 +55,7 @@ console.table([
   { item: "sample report", ready: true },
   { item: "feedback form", ready: true },
   { item: "triage sheet", ready: true },
+  { item: "run log", ready: true },
   { item: "publication prep", ready: true },
   { item: "security gate", ready: true },
   { item: "company test page", ready: true }

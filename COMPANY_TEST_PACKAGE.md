@@ -20,6 +20,7 @@ http://127.0.0.1:4173/prototype/company-test.html
 | 手順 | `COMPANY_TEST_HANDOFF.md` | テストの進め方、合格ライン、渡す前チェック |
 | 回収票 | `COMPANY_TEST_FEEDBACK.md` | 点数、除外理由、文面、操作性の評価回収 |
 | 整理表 | `COMPANY_TEST_TRIAGE.md` | 回収後の即修正、後回し、AI検討、本番連携の仕分け |
+| 実施ログ | `COMPANY_TEST_RUN_LOG.md` | 依頼日、返却日、PM判定、反映状態の管理 |
 | サンプル結果 | `COMPANY_TEST_SAMPLE_REPORT.md` | 返却してほしい結果レポートの完成イメージ |
 | 安全確認 | `SECURITY_REVIEW.md` | 実データ禁止、外部送信禁止、連携禁止の確認 |
 | 公開準備 | `PUBLICATION_APPROVAL_PREP.md` | 外部共有URL化の承認範囲とリスク整理 |
@@ -60,6 +61,15 @@ node prototype\run-all-smoke-tests.cjs
 - 提案メール文面の違和感
 - 追加したいNG条件
 - 追加したいマッチング条件
+
+## PMが記録するもの
+
+- 依頼日
+- 返却日
+- 回収物
+- PM判定
+- 次アクション
+- 反映状態
 
 ## 回収後にPMが仕分けるもの
 
