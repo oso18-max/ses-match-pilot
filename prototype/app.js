@@ -1358,6 +1358,7 @@ function companyTestReport(result) {
   const sendableTargets = result.targets.filter((target) => target.canSend);
   const blockedTargets = result.targets.filter((target) => !target.canSend);
   const talents = result.talents || [result.talent];
+  const nextDecision = companyTestNextDecision(result);
   const ranking = (result.candidateMatches || [result.match]).slice(0, result.topTalentLimit || 3).map((match, index) => {
     const talent = talents.find((item) => item.id === match.talentId) || result.talent;
     return `${index + 1}. ${talent.role}: ${match.score}点 / ${match.rank}`;
@@ -1380,6 +1381,10 @@ function companyTestReport(result) {
     "除外企業:",
     ...blockedTargets.map((target) => `- ${target.company}: ${target.blocked.join(" / ") || "除外"}`),
     "",
+    "PM判定:",
+    `${nextDecision.label}: ${nextDecision.detail}`,
+    `次アクション: ${nextDecision.action}`,
+    "",
     "企業側コメント:",
     state.companyTest.feedbackText || "未入力",
     "",
@@ -1388,6 +1393,67 @@ function companyTestReport(result) {
     `- 除外理由: ${state.companyTest.feedbackChecks.exclusion ? "確認済み" : "未確認"}`,
     `- メール文面: ${state.companyTest.feedbackChecks.mail ? "確認済み" : "未確認"}`
   ].join("\n");
+}
+
+function companyTestNextDecision(result) {
+  if (!result) {
+    return {
+      label: "未実行",
+      detail: "テスト結果がまだありません。",
+      action: "案件、人材、送信先CSVを入れてマッチング実行する",
+      type: ""
+    };
+  }
+
+  const verdict = companyTestVerdict(result);
+  const feedback = companyTestFeedbackStatus();
+  const sendableTargets = result.targets.filter((target) => target.canSend);
+  const blockedTargets = result.targets.filter((target) => !target.canSend);
+  const blockedReasons = companyTestBlockedSummary(result).map((item) => item.reason);
+  const hasReadIssue = result.match.score < 60 || result.match.missing.length >= 2;
+
+  if (verdict.type === "ok" && feedback.ready) {
+    return {
+      label: "本番連携設計へ進む",
+      detail: "点数、除外理由、メール文面の確認が揃っています。",
+      action: "Gmail/API/DB連携の承認範囲を整理する",
+      type: "ok"
+    };
+  }
+
+  if (verdict.type === "ok") {
+    return {
+      label: "企業コメント回収",
+      detail: "提案可能です。点数、除外理由、メール文面の確認を回収してください。",
+      action: "3項目チェックとコメント入力を依頼する",
+      type: "warn"
+    };
+  }
+
+  if (!sendableTargets.length && blockedTargets.length) {
+    return {
+      label: "送信先条件を見直す",
+      detail: `送信可能企業がありません。主な除外理由: ${blockedReasons.join(" / ") || "なし"}`,
+      action: "顧客NG条件、送信停止、年齢、商流、単価条件を確認する",
+      type: "warn"
+    };
+  }
+
+  if (hasReadIssue) {
+    return {
+      label: "読み取り精度を確認",
+      detail: "必須スキル不足または低スコアです。ルールベースで拾えていない表現がある可能性があります。",
+      action: "項目名辞書と表記ゆれを追加し、必要ならAIプラン候補に回す",
+      type: "bad"
+    };
+  }
+
+  return {
+    label: "ルール調整",
+    detail: "一部条件は合っています。送信基準点や除外条件の調整対象です。",
+    action: "点数内訳と除外理由を見てルールを修正する",
+    type: "warn"
+  };
 }
 
 function companyTestVerdict(result) {
@@ -2119,6 +2185,7 @@ function renderCompanyTest() {
   const feedbackStatus = companyTestFeedbackStatus();
   const inputStatus = companyTestInputStatus();
   const parsedSummary = companyTestParsedSummary();
+  const nextDecision = companyTestNextDecision(result);
 
   return `
     <section class="panel">
@@ -2276,6 +2343,14 @@ function renderCompanyTest() {
           <p class="muted">${verdict.detail}</p>
         </div>
         <div class="verdict-score">${result.match.score}<span>点</span></div>
+      </section>
+      <section class="panel next-decision-panel ${nextDecision.type}">
+        <div>
+          <span>PM判定</span>
+          <h2>${nextDecision.label}</h2>
+          <p>${nextDecision.detail}</p>
+        </div>
+        <strong>${nextDecision.action}</strong>
       </section>
       <div class="metrics">
         <div class="metric is-accent"><span>マッチング点数</span><strong>${result.match.score}</strong><small>${result.match.rank}</small></div>
@@ -2586,6 +2661,7 @@ if (typeof module !== "undefined") {
     companyTestParsedSummary,
     companyTestReport,
     companyTestVerdict,
+    companyTestNextDecision,
     companyTestScoreRows,
     companyTestBlockedSummary,
     companyTestFeedbackStatus,

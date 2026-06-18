@@ -681,6 +681,58 @@ textarea {
   font-size: 15px;
 }
 
+.next-decision-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 340px);
+  gap: 16px;
+  align-items: center;
+  border-color: #dbeafe;
+  background: #eff6ff;
+}
+
+.next-decision-panel.ok {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.next-decision-panel.warn {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.next-decision-panel.bad {
+  border-color: #fecaca;
+  background: #fff7f7;
+}
+
+.next-decision-panel span {
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.next-decision-panel h2 {
+  margin-bottom: 4px;
+}
+
+.next-decision-panel p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.next-decision-panel strong {
+  display: block;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 .check-list {
   display: grid;
   gap: 8px;
@@ -906,6 +958,7 @@ tr:last-child td { border-bottom: 0; }
   .input-status-grid,
   .handoff-banner,
   .guide-grid,
+  .next-decision-panel,
   .form-grid { grid-template-columns: 1fr; }
   .verdict-panel { align-items: flex-start; flex-direction: column; }
   .verdict-score { text-align: left; }
