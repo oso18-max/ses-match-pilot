@@ -46,25 +46,27 @@ START_COMPANY_TEST_SERVER.cmd
 node prototype\local-static-server.cjs
 ```
 
-ブラウザで開くURL:
+普段開くトップページ:
 
 ```text
 http://127.0.0.1:4173/prototype/index.html
 ```
 
-企業テスト直リンク:
+元のトップUIはここです。最初に見る画面は `マッチング管理` です。
+
+企業テストをトップ内で開くURL:
 
 ```text
 http://127.0.0.1:4173/prototype/index.html#companyTest
 ```
 
-企業テスト専用ページ:
+企業テストだけを直接開く専用ページ:
 
 ```text
 http://127.0.0.1:4173/prototype/company-test.html
 ```
 
-企業へ渡す場合は、まず上記の専用ページを使う。
+専用ページはトップではなく、企業テストだけを切り出した確認用ページ。
 この専用ページでは、メール送信、Gmail連携、外部API接続、実データ保存は行わない。
 
 画面で見る順番:
