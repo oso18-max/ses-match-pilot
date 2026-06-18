@@ -534,6 +534,26 @@ textarea {
   font-size: 15px;
 }
 
+.check-list {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.check-list label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.check-list input {
+  width: 18px;
+  height: 18px;
+}
+
 .toolbar {
   display: flex;
   flex-wrap: wrap;

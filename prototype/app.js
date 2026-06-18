@@ -30,6 +30,11 @@ const state = {
     result: null,
     history: [],
     feedbackText: "",
+    feedbackChecks: {
+      score: false,
+      exclusion: false,
+      mail: false
+    },
     errors: []
   }
 };
@@ -321,6 +326,7 @@ function saveCompanyTestDraft() {
     talentText: state.companyTest.talentText,
     customerCsv: state.companyTest.customerCsv,
     feedbackText: state.companyTest.feedbackText,
+    feedbackChecks: state.companyTest.feedbackChecks,
     history: state.companyTest.history
   }));
 }
@@ -335,6 +341,7 @@ function loadCompanyTestDraft() {
     state.companyTest.talentText = draft.talentText || state.companyTest.talentText;
     state.companyTest.customerCsv = draft.customerCsv || state.companyTest.customerCsv;
     state.companyTest.feedbackText = draft.feedbackText || "";
+    state.companyTest.feedbackChecks = { ...state.companyTest.feedbackChecks, ...(draft.feedbackChecks || {}) };
     state.companyTest.history = Array.isArray(draft.history) ? draft.history.slice(0, 10) : [];
   } catch {
     localStorage.removeItem("sesAutoSendCompanyTest");
@@ -344,6 +351,11 @@ function loadCompanyTestDraft() {
 function updateCompanyTestField(field, value) {
   state.companyTest[field] = value;
   state.companyTest.errors = [];
+  saveCompanyTestDraft();
+}
+
+function updateCompanyTestFeedbackCheck(field, checked) {
+  state.companyTest.feedbackChecks[field] = checked;
   saveCompanyTestDraft();
 }
 
@@ -375,6 +387,7 @@ function clearCompanyTestInput() {
   state.companyTest.customerCsv = "company,person,email,sendable,ngSkills,ngConditions\n";
   state.companyTest.result = null;
   state.companyTest.feedbackText = "";
+  state.companyTest.feedbackChecks = { score: false, exclusion: false, mail: false };
   state.companyTest.errors = [];
   saveCompanyTestDraft();
   render();
@@ -805,7 +818,12 @@ function companyTestReport(result) {
     ...blockedTargets.map((target) => `- ${target.company}: ${target.blocked.join(" / ") || "除外"}`),
     "",
     "企業側コメント:",
-    state.companyTest.feedbackText || "未入力"
+    state.companyTest.feedbackText || "未入力",
+    "",
+    "企業側確認:",
+    `- 点数の納得感: ${state.companyTest.feedbackChecks.score ? "確認済み" : "未確認"}`,
+    `- 除外理由: ${state.companyTest.feedbackChecks.exclusion ? "確認済み" : "未確認"}`,
+    `- メール文面: ${state.companyTest.feedbackChecks.mail ? "確認済み" : "未確認"}`
   ].join("\n");
 }
 
@@ -1460,6 +1478,11 @@ function renderCompanyTest() {
           <h2>提案メールプレビュー</h2>
           ${firstTarget ? `<div class="mail-preview">${templateFor(firstTarget, result.request, result.talent)}</div>` : `<p class="muted">送信先がありません。</p>`}
           <h2>企業側コメント</h2>
+          <div class="check-list">
+            <label><input type="checkbox" ${state.companyTest.feedbackChecks.score ? "checked" : ""} onchange="updateCompanyTestFeedbackCheck('score', this.checked)"> 点数の納得感を確認</label>
+            <label><input type="checkbox" ${state.companyTest.feedbackChecks.exclusion ? "checked" : ""} onchange="updateCompanyTestFeedbackCheck('exclusion', this.checked)"> 除外理由を確認</label>
+            <label><input type="checkbox" ${state.companyTest.feedbackChecks.mail ? "checked" : ""} onchange="updateCompanyTestFeedbackCheck('mail', this.checked)"> メール文面を確認</label>
+          </div>
           <textarea class="tester-textarea is-short" placeholder="点数の納得感、除外理由、メール文面へのコメントを入力" oninput="updateCompanyTestField('feedbackText', this.value)">${escapeHtml(state.companyTest.feedbackText)}</textarea>
           <h2>テスト結果レポート</h2>
           <div class="toolbar">
@@ -1644,6 +1667,7 @@ if (typeof module !== "undefined") {
     renderTestConsole,
     runTestSendOne,
     updateCompanyTestField,
+    updateCompanyTestFeedbackCheck,
     resetCompanyTestSample,
     applyCompanyTestPreset,
     clearCompanyTestInput,
