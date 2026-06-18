@@ -126,6 +126,12 @@ http://127.0.0.1:4173/prototype/company-test.html
 node prototype\run-all-smoke-tests.cjs
 ```
 
+企業テストの最終チェック:
+
+```powershell
+node prototype\company-test-final-readiness.cjs
+```
+
 メール取込の品質確認:
 
 ```powershell
