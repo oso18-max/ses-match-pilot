@@ -67,6 +67,7 @@ PMのいさおを起点に、実データなしでSES業務フロー、情報項
 - `COMPANY_TEST_SAMPLE_REPORT.md` に企業テスト後のサンプル結果レポートを追加済み
 - `COMPANY_TEST_TRIAGE.md` に企業テスト後のフィードバック整理表を追加済み
 - `COMPANY_TEST_INVITE.md` に企業テスト案内文を追加し、画面からコピーできるように更新済み
+- `PUBLICATION_APPROVAL_PREP.md` に公開URL化の承認前準備を追加済み
 - `company-test-final-readiness.cjs` に企業テスト最終チェックを追加済み
 - `publication-safety-scan.cjs` に実メール混入と外部通信コードの公開前安全スキャンを追加済み
 - 企業テスト結果に、企業コメント回収、送信先条件見直し、本番連携設計などのPM判定を追加済み

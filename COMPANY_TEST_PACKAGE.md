@@ -22,6 +22,7 @@ http://127.0.0.1:4173/prototype/company-test.html
 | 整理表 | `COMPANY_TEST_TRIAGE.md` | 回収後の即修正、後回し、AI検討、本番連携の仕分け |
 | サンプル結果 | `COMPANY_TEST_SAMPLE_REPORT.md` | 返却してほしい結果レポートの完成イメージ |
 | 安全確認 | `SECURITY_REVIEW.md` | 実データ禁止、外部送信禁止、連携禁止の確認 |
+| 公開準備 | `PUBLICATION_APPROVAL_PREP.md` | 外部共有URL化の承認範囲とリスク整理 |
 
 ## PMが確認するコマンド
 

@@ -18,6 +18,7 @@ const invite = readText("COMPANY_TEST_INVITE.md");
 const sampleReport = readText("COMPANY_TEST_SAMPLE_REPORT.md");
 const feedback = readText("COMPANY_TEST_FEEDBACK.md");
 const triage = readText("COMPANY_TEST_TRIAGE.md");
+const publicationPrep = readText("PUBLICATION_APPROVAL_PREP.md");
 const security = readText("SECURITY_REVIEW.md");
 const companyPage = fs.readFileSync(path.join(__dirname, "company-test.html"), "utf8");
 const sampleStore = JSON.parse(fs.readFileSync(path.join(__dirname, "sample-local-store.json"), "utf8"));
@@ -46,7 +47,7 @@ const checks = [
   },
   {
     item: "配布パッケージ",
-    ok: has(packageGuide, /企業へ渡すもの/) && has(packageGuide, /PMが確認するコマンド/) && has(packageGuide, /COMPANY_TEST_SAMPLE_REPORT\.md/) && has(packageGuide, /COMPANY_TEST_TRIAGE\.md/),
+    ok: has(packageGuide, /企業へ渡すもの/) && has(packageGuide, /PMが確認するコマンド/) && has(packageGuide, /COMPANY_TEST_SAMPLE_REPORT\.md/) && has(packageGuide, /COMPANY_TEST_TRIAGE\.md/) && has(packageGuide, /PUBLICATION_APPROVAL_PREP\.md/),
     detail: "渡す資料と確認コマンドを1か所で見られる"
   },
   {
@@ -63,6 +64,11 @@ const checks = [
     item: "公開前スキャン",
     ok: has(safetyScan, /non-test-email/) && has(safetyScan, /network-code/),
     detail: "実メール混入と外部通信コードを検査できる"
+  },
+  {
+    item: "公開承認準備",
+    ok: has(publicationPrep, /GitHubへpush/) && has(publicationPrep, /リポジトリpublic化/) && has(publicationPrep, /承認が必要な時のコピー文/),
+    detail: "外部共有URL化の承認範囲を説明できる"
   },
   {
     item: "回収票",
