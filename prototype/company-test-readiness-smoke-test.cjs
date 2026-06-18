@@ -6,6 +6,7 @@ const root = path.resolve(__dirname, "..");
 const handoff = fs.readFileSync(path.join(root, "COMPANY_TEST_HANDOFF.md"), "utf8");
 const packageGuide = fs.readFileSync(path.join(root, "COMPANY_TEST_PACKAGE.md"), "utf8");
 const invite = fs.readFileSync(path.join(root, "COMPANY_TEST_INVITE.md"), "utf8");
+const sampleReport = fs.readFileSync(path.join(root, "COMPANY_TEST_SAMPLE_REPORT.md"), "utf8");
 const feedback = fs.readFileSync(path.join(root, "COMPANY_TEST_FEEDBACK.md"), "utf8");
 const security = fs.readFileSync(path.join(root, "SECURITY_REVIEW.md"), "utf8");
 const companyPage = fs.readFileSync(path.join(__dirname, "company-test.html"), "utf8");
@@ -18,9 +19,12 @@ assert.match(handoff, /個人情報は入れない/);
 assert.match(packageGuide, /企業テスト配布パッケージ/);
 assert.match(packageGuide, /企業へ渡すもの/);
 assert.match(packageGuide, /node prototype\\company-test-final-readiness\.cjs/);
+assert.match(packageGuide, /COMPANY_TEST_SAMPLE_REPORT\.md/);
 assert.match(invite, /SES Auto Send 企業テストのお願い/);
 assert.match(invite, /実メール本文、実スキルシート本文、個人情報は入れない/);
 assert.match(invite, /push、公開URL化、GitHub Pages反映は明示承認後/);
+assert.match(sampleReport, /SES Auto Send テスト結果/);
+assert.match(sampleReport, /企業側確認/);
 assert.match(feedback, /点数の納得感/);
 assert.match(feedback, /除外理由の納得感/);
 assert.match(feedback, /提案メール文面/);
@@ -33,6 +37,7 @@ console.table([
   { item: "handoff guide", ready: true },
   { item: "package guide", ready: true },
   { item: "invite message", ready: true },
+  { item: "sample report", ready: true },
   { item: "feedback form", ready: true },
   { item: "security gate", ready: true },
   { item: "company test page", ready: true }

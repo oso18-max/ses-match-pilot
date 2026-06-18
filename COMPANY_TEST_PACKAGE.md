@@ -19,6 +19,7 @@ http://127.0.0.1:4173/prototype/company-test.html
 | 案内文 | `COMPANY_TEST_INVITE.md` | 企業へ送るコピー用文面 |
 | 手順 | `COMPANY_TEST_HANDOFF.md` | テストの進め方、合格ライン、渡す前チェック |
 | 回収票 | `COMPANY_TEST_FEEDBACK.md` | 点数、除外理由、文面、操作性の評価回収 |
+| サンプル結果 | `COMPANY_TEST_SAMPLE_REPORT.md` | 返却してほしい結果レポートの完成イメージ |
 | 安全確認 | `SECURITY_REVIEW.md` | 実データ禁止、外部送信禁止、連携禁止の確認 |
 
 ## PMが確認するコマンド

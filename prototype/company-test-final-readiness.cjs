@@ -15,6 +15,7 @@ function has(text, pattern) {
 const handoff = readText("COMPANY_TEST_HANDOFF.md");
 const packageGuide = readText("COMPANY_TEST_PACKAGE.md");
 const invite = readText("COMPANY_TEST_INVITE.md");
+const sampleReport = readText("COMPANY_TEST_SAMPLE_REPORT.md");
 const feedback = readText("COMPANY_TEST_FEEDBACK.md");
 const security = readText("SECURITY_REVIEW.md");
 const companyPage = fs.readFileSync(path.join(__dirname, "company-test.html"), "utf8");
@@ -43,8 +44,13 @@ const checks = [
   },
   {
     item: "配布パッケージ",
-    ok: has(packageGuide, /企業へ渡すもの/) && has(packageGuide, /PMが確認するコマンド/),
+    ok: has(packageGuide, /企業へ渡すもの/) && has(packageGuide, /PMが確認するコマンド/) && has(packageGuide, /COMPANY_TEST_SAMPLE_REPORT\.md/),
     detail: "渡す資料と確認コマンドを1か所で見られる"
+  },
+  {
+    item: "サンプル結果",
+    ok: has(sampleReport, /SES Auto Send テスト結果/) && has(sampleReport, /PM判定/) && has(sampleReport, /企業側確認/),
+    detail: "企業から返してほしい結果イメージがある"
   },
   {
     item: "安全注意",
