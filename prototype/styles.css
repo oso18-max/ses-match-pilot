@@ -493,6 +493,62 @@ textarea {
   background: var(--warn);
 }
 
+.test-flow-panel {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.test-flow-panel > div {
+  display: grid;
+  gap: 5px;
+  min-height: 92px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+}
+
+.test-flow-panel span {
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.test-flow-panel strong {
+  font-size: 15px;
+}
+
+.test-flow-panel small {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.acceptance-panel {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius);
+  background: #f0fdf4;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+
+.acceptance-panel strong {
+  flex: 0 0 auto;
+  color: var(--success);
+  font-size: 14px;
+}
+
+.acceptance-panel span {
+  color: #166534;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .read-summary {
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -846,6 +902,7 @@ tr:last-child td { border-bottom: 0; }
   .flow,
   .test-steps,
   .tester-layout,
+  .test-flow-panel,
   .input-status-grid,
   .handoff-banner,
   .guide-grid,

@@ -2143,6 +2143,27 @@ function renderCompanyTest() {
       <div class="notice">
         企業テストは、案件情報・人材情報・送信先CSVを貼って「マッチング実行」を押すだけです。実メール送信は発生しません。
       </div>
+      <div class="test-flow-panel">
+        <div>
+          <span>STEP 1</span>
+          <strong>貼り付け</strong>
+          <small>案件、人材、送信先CSVを入れる</small>
+        </div>
+        <div>
+          <span>STEP 2</span>
+          <strong>判定を見る</strong>
+          <small>点数、送信可能企業、除外理由を見る</small>
+        </div>
+        <div>
+          <span>STEP 3</span>
+          <strong>コメント回収</strong>
+          <small>違和感を書いてレポート保存</small>
+        </div>
+      </div>
+      <div class="acceptance-panel">
+        <strong>企業テストの合格ライン</strong>
+        <span>点数・除外理由・メール文面の3つが営業感覚と大きくズレていなければ、次は本番連携設計へ進めます。</span>
+      </div>
       <div class="toolbar">
         <span class="muted">サンプル切替</span>
         <button class="ghost-action" onclick="applyCompanyTestPreset('java')">Java案件</button>
