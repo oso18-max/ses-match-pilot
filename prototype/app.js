@@ -896,6 +896,21 @@ function companyTestBlockedSummary(result) {
   return Object.entries(summary).map(([reason, count]) => ({ reason, count }));
 }
 
+function companyTestFeedbackStatus() {
+  const checked = Object.values(state.companyTest.feedbackChecks).filter(Boolean).length;
+  const hasComment = state.companyTest.feedbackText.trim().length > 0;
+  const ready = checked === 3 && hasComment;
+  return {
+    checked,
+    hasComment,
+    ready,
+    label: ready ? "回収準備OK" : "確認中",
+    detail: ready
+      ? "コメントと3項目の確認が揃っています。テスト結果レポートを保存してください。"
+      : "点数、除外理由、メール文面の確認チェックとコメント入力をお願いします。"
+  };
+}
+
 function companyTestCsvTemplate() {
   return [
     "company,person,email,sendable,ngSkills,ngConditions",
@@ -1383,6 +1398,7 @@ function renderCompanyTest() {
   const blockedTargets = result ? result.targets.filter((target) => !target.canSend) : [];
   const firstTarget = sendableTargets[0] || result?.targets[0];
   const verdict = companyTestVerdict(result);
+  const feedbackStatus = companyTestFeedbackStatus();
 
   return `
     <section class="panel">
@@ -1540,6 +1556,11 @@ function renderCompanyTest() {
             <label><input type="checkbox" ${state.companyTest.feedbackChecks.mail ? "checked" : ""} onchange="updateCompanyTestFeedbackCheck('mail', this.checked)"> メール文面を確認</label>
           </div>
           <textarea class="tester-textarea is-short" placeholder="点数の納得感、除外理由、メール文面へのコメントを入力" oninput="updateCompanyTestField('feedbackText', this.value)">${escapeHtml(state.companyTest.feedbackText)}</textarea>
+          <section class="feedback-status ${feedbackStatus.ready ? "ready" : ""}">
+            <strong>${feedbackStatus.label}</strong>
+            <span>${feedbackStatus.detail}</span>
+            <small>確認 ${feedbackStatus.checked}/3 / コメント ${feedbackStatus.hasComment ? "あり" : "なし"}</small>
+          </section>
           <h2>テスト結果レポート</h2>
           <div class="toolbar">
             <button class="ghost-action" onclick="copyCompanyTestReport()">コピー</button>
@@ -1741,6 +1762,7 @@ if (typeof module !== "undefined") {
     companyTestVerdict,
     companyTestScoreRows,
     companyTestBlockedSummary,
+    companyTestFeedbackStatus,
     copyCompanyTestReport,
     companyTestCsvTemplate,
     copyCompanyTestCsvTemplate,

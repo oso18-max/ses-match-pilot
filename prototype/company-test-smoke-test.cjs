@@ -28,6 +28,8 @@ const customers = app.parseCompanyTestCustomers("company,person,email,sendable,n
 const match = app.score(request, talent);
 app.state.companyTest.feedbackText = "score ok";
 app.state.companyTest.feedbackChecks.score = true;
+app.state.companyTest.feedbackChecks.exclusion = true;
+app.state.companyTest.feedbackChecks.mail = true;
 const report = app.companyTestReport({
   request,
   talent,
@@ -50,6 +52,7 @@ assert.deepEqual(app.companyTestBlockedSummary({ targets: [{ blocked: ["送信�
 assert.match(report, /マッチング点数/);
 assert.match(report, /送信可能: 1件/);
 assert.match(report, /score ok/);
+assert.equal(app.companyTestFeedbackStatus().ready, true);
 assert.match(report, /確認済み/);
 assert.equal(app.validateCompanyTestInput().length, 0);
 assert.equal(app.parseCompanyTestCsvRows("company,person,email,sendable\n\"A,Inc\",田中,a@example.invalid,送信可")[1][0], "A,Inc");
@@ -57,6 +60,7 @@ assert.equal(app.companyTestCsvHeaders("company,person,email,sendable\nA,田中,
 assert.equal(typeof app.resetCompanyTestSample, "function");
 assert.equal(typeof app.applyCompanyTestPreset, "function");
 assert.equal(typeof app.updateCompanyTestFeedbackCheck, "function");
+assert.equal(typeof app.companyTestFeedbackStatus, "function");
 assert.equal(typeof app.clearCompanyTestInput, "function");
 assert.equal(typeof app.downloadCompanyTestReport, "function");
 assert.equal(app.companyTestPackage().version, 1);
